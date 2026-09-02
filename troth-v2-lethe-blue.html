@@ -59,6 +59,25 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
 .memory-map{height:560px;position:relative;overflow:hidden;background:radial-gradient(circle at 50% 48%,rgba(215,255,178,.04),transparent 35%)}.memory-map:before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.08) 1px,transparent 1px);background-size:24px 24px;opacity:.18}.map-ring{position:absolute;border:1px solid rgba(255,255,255,.045);border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);width:360px;height:360px}.map-ring.r2{width:230px;height:230px}.map-node{position:absolute;border-radius:50%;display:grid;place-items:center;text-align:center;background:#152838;box-shadow:0 18px 50px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.09);font:9px "DM Mono";letter-spacing:.05em;z-index:3;transition:transform .2s var(--ease-out),box-shadow .2s var(--ease-out)}.map-node:hover{transform:scale(1.06);box-shadow:0 22px 60px rgba(0,0,0,.65),0 0 0 1px rgba(215,255,178,.3)}.mn-a{width:132px;height:132px;left:44%;top:39%;color:var(--warm)}.mn-b{width:86px;height:86px;left:18%;top:20%;color:var(--hot)}.mn-c{width:78px;height:78px;right:16%;top:18%;color:var(--ref)}.mn-d{width:90px;height:90px;right:12%;bottom:17%;color:var(--flag)}.mn-e{width:72px;height:72px;left:16%;bottom:16%;color:var(--cold)}.sat{position:absolute;width:10px;height:10px;border-radius:50%;background:#777;box-shadow:0 0 10px rgba(255,255,255,.2);z-index:2}.s-a{left:38%;top:26%}.s-b{left:66%;top:31%}.s-c{left:33%;top:65%}.s-d{left:69%;top:67%}.s-e{left:27%;top:49%}.s-f{left:74%;top:49%}
 .activity{padding:4px 18px}.activity-row{padding:17px 0;border-bottom:1px solid var(--hair);display:grid;grid-template-columns:60px 1fr auto;gap:10px;align-items:start}.activity-row:last-child{border:0}.activity-row time{font:9px "DM Mono";color:#5f605b}.activity-row strong{font-size:11px;font-weight:600}.activity-row p{margin:4px 0 0;color:#70716b;font-size:10px;line-height:1.5}.tag{font:8px "DM Mono";padding:5px 7px;border-radius:20px;background:#172A39;color:#a4a59e}.tag.flag{color:var(--flag);background:rgba(255,156,114,.07)}.ingest{margin-top:10px;padding:18px;background:#101F2D;border-radius:15px;box-shadow:0 0 0 1px var(--hair);display:flex;align-items:center;justify-content:space-between}.ingest-copy b{font-size:12px}.ingest-copy p{margin:5px 0 0;color:#6d6e68;font-size:10px}
 .drawer{position:fixed;right:0;top:0;bottom:0;width:min(470px,100%);background:#101F2D;z-index:30;transform:translateX(105%);transition:transform .28s var(--ease-out);box-shadow:-30px 0 90px rgba(0,0,0,.55),-1px 0 rgba(255,255,255,.08);padding:27px}.drawer.open{transform:translateX(0)}.drawer-close{float:right;color:#777;cursor:pointer}.drawer h2{font-size:30px;letter-spacing:-.05em;margin:55px 0 12px}.drawer-quote{font-size:18px;line-height:1.5;color:#d8d7d1;padding:20px 0;border-bottom:1px solid var(--hair)}.drawer-row{padding:15px 0;border-bottom:1px solid var(--hair);display:flex;justify-content:space-between;color:#777;font:10px "DM Mono"}.drawer-row b{color:#ddd;font-weight:400}.resolve{display:flex;gap:8px;margin-top:24px}.resolve .approve{background:#d7ffb2;color:#111}.resolve .reject{background:#1A2730;color:#ff9c72}
+/* live data: ingest panel, states, dynamic map nodes */
+.ingest-panel{position:fixed;right:0;top:0;bottom:0;width:min(560px,100%);background:#101F2D;z-index:31;transform:translateX(105%);transition:transform .28s var(--ease-out);box-shadow:-30px 0 90px rgba(0,0,0,.55),-1px 0 rgba(255,255,255,.08);padding:27px;overflow-y:auto}
+.ingest-panel.open{transform:translateX(0)}
+.ingest-panel h2{font-size:30px;letter-spacing:-.05em;margin:40px 0 8px}
+.ingest-panel .lead{color:#70716b;font-size:12px;line-height:1.6;margin-bottom:20px}
+.ingest-panel label{display:block;font:9px "DM Mono";color:#62635d;letter-spacing:.1em;margin:0 0 7px}
+.ingest-panel input,.ingest-panel textarea{width:100%;background:#0C1927;border:1px solid var(--hair);border-radius:10px;padding:13px;color:#d8d7d1;font-size:12px;outline:0;margin-bottom:16px}
+.ingest-panel textarea{min-height:200px;font-family:"DM Mono",monospace;line-height:1.6;resize:vertical}
+.ingest-panel input:focus,.ingest-panel textarea:focus{border-color:rgba(215,255,178,.35)}
+.routed{margin-top:22px}
+.routed-row{padding:13px 0;border-bottom:1px solid var(--hair);display:grid;grid-template-columns:88px 1fr;gap:11px;align-items:start}
+.routed-row:last-child{border:0}
+.routed-row p{margin:5px 0 0;color:#70716b;font-size:10px;line-height:1.5}
+.routed-row .txt{font-size:11px;color:#c9c8c2;line-height:1.5}
+.state{padding:34px 18px;text-align:center;color:#6d6e68;font-size:11px;line-height:1.7}
+.state.err{color:var(--flag)}
+.map-node.dyn{cursor:pointer}
+.map-node small{display:block;margin-top:4px;opacity:.72;font-size:8px}
+.busy{opacity:.5;pointer-events:none}
 @keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
 @keyframes artIn{from{opacity:0;transform:scale(.92) rotate(-3deg)}to{opacity:1;transform:none}}
 @keyframes spin{to{transform:rotate(360deg)}}@keyframes float{50%{transform:translateY(-9px)}}@keyframes scan{0%,100%{transform:translateY(0);opacity:0}20%{opacity:.8}70%{transform:translateY(590px);opacity:.2}}
@@ -148,17 +167,17 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
   <div class="dash-layout">
     <aside class="sidebar">
       <div class="side-label mono">WORKSPACE</div>
-      <div class="sideitem active">Overview</div><div class="sideitem">Memory</div><div class="sideitem">Deals</div><div class="sideitem">Promises</div><div class="sideitem">Clients</div><div class="sideitem">Flags <span style="float:right;color:var(--flag)">4</span></div>
+      <div class="sideitem active">Overview</div><div class="sideitem">Memory</div><div class="sideitem">Deals</div><div class="sideitem">Promises</div><div class="sideitem">Clients</div><div class="sideitem">Flags <span id="side-flags" style="float:right;color:var(--flag)">—</span></div>
       <div style="height:28px"></div><div class="side-label mono">SYSTEM</div>
       <div class="sideitem">Ingestion</div><div class="sideitem">Policies</div><div class="sideitem">Audit trail</div>
     </aside>
     <main class="dashmain">
-      <div class="dashhead"><div><div class="mono muted">THURSDAY · 20 AUG 2026</div><h1>Trust overview</h1></div><input class="search" placeholder="Search active memory…"></div>
+      <div class="dashhead"><div><div class="mono muted" id="dash-date">—</div><h1>Trust overview</h1></div><input class="search" id="search" placeholder="Search active memory…" autocomplete="off"></div>
       <div class="statrow">
-        <div class="statbox"><span class="change">+2 this week</span><small>ACTIVE DEALS</small><strong>14</strong></div>
-        <div class="statbox"><span class="change">+6</span><small>TRACKED PROMISES</small><strong>38</strong></div>
-        <div class="statbox"><span class="change" style="color:var(--flag)">NEEDS REVIEW</span><small>FLAGGED</small><strong style="color:var(--flag)">04</strong></div>
-        <div class="statbox"><span class="change">AUDIT READY</span><small>ARCHIVED</small><strong>07</strong></div>
+        <div class="statbox"><span class="change">WARM</span><small>ACTIVE CLIENTS</small><strong id="stat-clients">—</strong></div>
+        <div class="statbox"><span class="change">WARM</span><small>TRACKED PROMISES</small><strong id="stat-promises">—</strong></div>
+        <div class="statbox"><span class="change" id="stat-flag-label" style="color:var(--flag)">—</span><small>FLAGGED</small><strong id="stat-flagged" style="color:var(--flag)">—</strong></div>
+        <div class="statbox"><span class="change">COLD AUDIT</span><small>ARCHIVED</small><strong id="stat-archived">—</strong></div>
       </div>
       <div class="dashgrid">
         <section class="dashpanel">
@@ -166,25 +185,32 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
           <div class="memory-map">
             <div class="map-ring"></div><div class="map-ring r2"></div>
             <i class="sat s-a"></i><i class="sat s-b"></i><i class="sat s-c"></i><i class="sat s-d"></i><i class="sat s-e"></i><i class="sat s-f"></i>
-            <div class="map-node mn-a" onclick="openDrawer()">NIMBUS<br>RETAIL<br><small>$84K · WARM</small></div>
-            <div class="map-node mn-b">HOT<br>RENEWAL</div><div class="map-node mn-c">REFERENCE<br>15% MAX</div><div class="map-node mn-d" onclick="openDrawer()">FLAGGED<br>20% CLAIM</div><div class="map-node mn-e">COLD<br>CALL 14:32</div>
+            <div id="map-nodes"></div>
           </div>
         </section>
         <section class="dashpanel">
           <div class="panel-title"><b>Recent trust events</b><span class="filter">VIEW ALL →</span></div>
-          <div class="activity">
-            <div class="activity-row"><time>08:42</time><div><strong>Promise confirmed</strong><p>Nimbus · implementation by Sept 12.</p></div><span class="tag">WARM</span></div>
-            <div class="activity-row"><time>08:18</time><div><strong style="color:var(--flag)">Promise flagged</strong><p>Acme · 20% discount conflicts with policy.</p></div><span class="tag flag">FLAGGED</span></div>
-            <div class="activity-row"><time>07:54</time><div><strong>Client archived</strong><p>Northstar · churned, receipt generated.</p></div><span class="tag">ARCHIVE</span></div>
-            <div class="activity-row"><time>07:31</time><div><strong>Interaction logged</strong><p>Nimbus · client call added to COLD.</p></div><span class="tag">COLD</span></div>
-            <div class="activity-row"><time>06:48</time><div><strong>Pricing rule updated</strong><p>Max discount changed to 15%.</p></div><span class="tag">REF</span></div>
-          </div>
-        </section>
+          <div class="activity" id="activity"></div>
+          </section>
       </div>
-      <div class="ingest"><div class="ingest-copy"><b>Have a transcript?</b><p>Drop it into Troth. We'll classify the memory and show you every promise before it becomes fact.</p></div><button class="cta">+ Ingest memory</button></div>
+      <div class="ingest"><div class="ingest-copy"><b>Have a transcript?</b><p>Drop it into Troth. We'll classify the memory and show you every promise before it becomes fact.</p></div><button class="cta" onclick="openIngest()">+ Ingest memory</button></div>
     </main>
   </div>
 </div>
+
+<aside class="ingest-panel" id="ingest-panel">
+  <span class="drawer-close" onclick="closeIngest()">CLOSE ×</span>
+  <div class="mono muted">INGEST · TRANSCRIPT</div>
+  <h2>Route a conversation</h2>
+  <p class="lead">Each line is classified and written to the tier it belongs in. Promises are checked against the live REFERENCE policy before anything is confirmed.</p>
+  <label>CLIENT</label>
+  <input id="ingest-client" placeholder="meridian" autocomplete="off">
+  <label>TRANSCRIPT</label>
+  <textarea id="ingest-text" placeholder="Rep: Following up after our call.
+Dara: We're Meridian Labs, I'm the CTO here."></textarea>
+  <button class="cta" id="ingest-run" onclick="runIngest()">Run ingestion</button>
+  <div class="routed" id="ingest-result"></div>
+</aside>
 
 <aside class="drawer" id="drawer">
   <span class="drawer-close" onclick="closeDrawer()">CLOSE ×</span>
@@ -200,26 +226,265 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
 </aside>
 
 <script>
+/* ------------------------------------------------------------------
+   Every number on this dashboard comes from /api/*, which reads Sibyl
+   Memory on each request. Nothing here is cached and nothing is seeded
+   client-side: with the Sibyl database gone, this page renders its
+   error state, not zeros.
+------------------------------------------------------------------- */
+const TIER_COLOR = {WARM:'--warm', HOT:'--hot', COLD:'--cold',
+                    REFERENCE:'--ref', FLAGGED:'--flag', ARCHIVE:'--arch'};
+const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let STATE = {flagged: [], nodes: [], events: []};
+
+async function api(path, opts) {
+  const res = await fetch(path, opts);
+  const body = await res.json().catch(() => ({error: 'bad_response'}));
+  if (!res.ok) throw new Error(body.detail || body.error || res.status);
+  return body;
+}
+
+/* ---- views ---- */
 function openDashboard(){
  document.getElementById('landing').style.display='none';
  document.getElementById('dashboard').style.display='block';
  window.scrollTo({top:0,behavior:'auto'});
+ refresh();
 }
 function closeDashboard(){
- document.getElementById('drawer').classList.remove('open');
+ closeDrawer(); closeIngest();
  document.getElementById('dashboard').style.display='none';
  document.getElementById('landing').style.display='block';
  window.scrollTo({top:0,behavior:'auto'});
 }
 function openDrawer(){document.getElementById('drawer').classList.add('open')}
 function closeDrawer(){document.getElementById('drawer').classList.remove('open')}
-function resolve(state){
- const drawer=document.getElementById('drawer');
- const title=drawer.querySelector('h2');
- title.textContent=state==='approved'?'Promise approved':state==='retracted'?'Promise retracted':'Promise archived';
- drawer.querySelector('.drawer-quote').textContent=state==='approved'?'Promoted to WARM memory. COLD audit event written.':state==='retracted'?'Removed from active commitments. COLD audit event written.':'Retired with an immutable archive receipt.';
- drawer.querySelector('.resolve').style.display='none';
+function openIngest(){document.getElementById('ingest-panel').classList.add('open')}
+function closeIngest(){document.getElementById('ingest-panel').classList.remove('open')}
+
+/* ---- load everything ---- */
+async function refresh(){
+  const date = new Date().toLocaleDateString('en-GB',
+    {weekday:'long', day:'2-digit', month:'short', year:'numeric'});
+  document.getElementById('dash-date').textContent = date.toUpperCase().replace(/,/g,' ·');
+
+  let d;
+  try {
+    d = await api('/api/overview');
+  } catch (err) {
+    return renderUnavailable(err.message);
+  }
+  STATE = d;
+
+  document.getElementById('stat-clients').textContent  = d.clients;
+  document.getElementById('stat-promises').textContent = d.promises;
+  document.getElementById('stat-flagged').textContent  = String(d.flagged).padStart(2,'0');
+  document.getElementById('stat-archived').textContent = String(d.archived).padStart(2,'0');
+  document.getElementById('stat-flag-label').textContent = d.flagged ? 'NEEDS REVIEW' : 'CLEAR';
+  document.getElementById('side-flags').textContent = d.flagged || '';
+
+  renderMap(d);
+  renderActivity(d.events);
 }
+
+/* The Sibyl layer is gone or unreachable. Say so loudly — an empty
+   dashboard reads as a quiet week, which is exactly the wrong thing to
+   show when the memory layer is missing. */
+function renderUnavailable(detail){
+  ['stat-clients','stat-promises','stat-flagged','stat-archived']
+    .forEach(id => document.getElementById(id).textContent = '—');
+  document.getElementById('stat-flag-label').textContent = 'NO MEMORY';
+  document.getElementById('side-flags').textContent = '';
+  document.getElementById('map-nodes').innerHTML =
+    '<div class="state err" style="padding-top:240px">Sibyl Memory is unavailable.<br>' +
+    esc(detail) + '<br><br>Troth has no other store to read from.</div>';
+  document.getElementById('activity').innerHTML =
+    '<div class="state err">No timeline. COLD journal unreachable.</div>';
+}
+
+/* ---- memory map: real records in the existing five slots ---- */
+function renderMap(d){
+  const host = document.getElementById('map-nodes');
+  const clients = d.nodes.filter(n => n.category === 'client');
+  const flagged = d.flagged_items;
+  const latest  = d.events[0];
+
+  const slots = [
+    clients[0] && {cls:'mn-a', tier:'WARM', top:'CLIENT',
+                   label:clients[0].id, sub:'WARM · confirmed', rec:clients[0]},
+    d.promises > 0 && {cls:'mn-b', tier:'HOT', top:'HOT', label:'ACTIVE',
+                       sub:d.promises + ' promises'},
+    d.max_discount_pct != null && {cls:'mn-c', tier:'REFERENCE', top:'REFERENCE',
+                   label:d.max_discount_pct + '% MAX', sub:'policy'},
+    flagged[0] && {cls:'mn-d', tier:'FLAGGED', top:'FLAGGED',
+                   label:(flagged[0].body.discount_pct != null
+                          ? flagged[0].body.discount_pct + '% CLAIM' : 'UNVERIFIED'),
+                   sub:'tap to review', rec:flagged[0]},
+    latest && {cls:'mn-e', tier:'COLD', top:'COLD',
+               label:(latest.ts || '').slice(11,16), sub:'last event'},
+  ].filter(Boolean);
+
+  host.innerHTML = slots.map((s, i) =>
+    `<div class="map-node dyn ${s.cls}" data-i="${i}" style="color:var(${TIER_COLOR[s.tier]})">` +
+    `<span>${esc(s.top)}<br>${esc(s.label)}<small>${esc(s.sub)}</small></span></div>`
+  ).join('');
+
+  host.querySelectorAll('.map-node').forEach(el => {
+    const rec = slots[+el.dataset.i].rec;
+    if (rec) el.onclick = () => showRecord(rec);
+  });
+
+  if (!slots.length) host.innerHTML =
+    '<div class="state" style="padding-top:240px">Memory is empty.<br>' +
+    'Ingest a transcript to give Troth something to remember.</div>';
+}
+
+/* ---- COLD journal ---- */
+function renderActivity(events){
+  const host = document.getElementById('activity');
+  if (!events.length) {
+    host.innerHTML = '<div class="state">No events on the timeline yet.</div>';
+    return;
+  }
+  const TITLE = {
+    promise_flagged:  ['Promise flagged','FLAGGED',true],
+    promise_confirmed:['Promise confirmed','WARM',false],
+    flag_resolved:    ['Flag resolved','COLD',false],
+    client_archived:  ['Client archived','ARCHIVE',false],
+    policy_note:      ['Policy noted','REF',false],
+    transcript_line:  ['Interaction logged','COLD',false],
+    unclassified:     ['Kept unclassified','COLD',false],
+  };
+  host.innerHTML = events.slice(0,7).map(e => {
+    const [title, tag, isFlag] = TITLE[e.kind] || ['Event logged','COLD',false];
+    return `<div class="activity-row"><time>${esc((e.ts||'').slice(11,16))}</time>` +
+      `<div><strong${isFlag?' style="color:var(--flag)"':''}>${esc(title)}</strong>` +
+      `<p>${esc(e.deal || '')} · ${esc((e.text||'').slice(0,72))}</p></div>` +
+      `<span class="tag${isFlag?' flag':''}">${esc(tag)}</span></div>`;
+  }).join('');
+}
+
+/* ---- drawer: a real flagged promise, resolved for real ---- */
+let CURRENT = null;
+function showRecord(rec){
+  CURRENT = rec;
+  const b = rec.body || {};
+  const drawer = document.getElementById('drawer');
+  drawer.querySelector('.mono.muted').textContent =
+    'PROMISE · ' + String(rec.status || '').toUpperCase();
+  drawer.querySelector('h2').textContent =
+    b.discount_pct != null ? b.discount_pct + '% discount' : 'Unverified promise';
+  drawer.querySelector('.drawer-quote').textContent = '“' + (b.text || rec.name) + '”';
+
+  const rows = [
+    ['MADE BY',   b.made_by || 'unknown'],
+    ['REASON',    b.reason  || '—'],
+    ['REFERENCE', b.checked_against != null
+                    ? 'Maximum discount · ' + b.checked_against + '%'
+                    : 'no figure to check'],
+    ['STATUS',    rec.status === 'flagged'
+                    ? 'Human resolution required' : rec.status],
+  ];
+  drawer.querySelectorAll('.drawer-row').forEach((el, i) => {
+    if (!rows[i]) { el.style.display = 'none'; return; }
+    el.style.display = '';
+    el.innerHTML = `<span>${esc(rows[i][0])}</span><b${i===3&&rec.status==='flagged'
+      ?' style="color:var(--flag)"':''}>${esc(rows[i][1])}</b>`;
+  });
+  drawer.querySelector('.resolve').style.display =
+    rec.status === 'flagged' ? 'flex' : 'none';
+  openDrawer();
+}
+
+async function resolve(decision){
+  if (!CURRENT) return;
+  const drawer = document.getElementById('drawer');
+  const box = drawer.querySelector('.resolve');
+  box.classList.add('busy');
+  try {
+    if (decision === 'archived') {
+      await api('/api/resolve', {method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({id: CURRENT.id, decision:'retract',
+                              note:'archived from the dashboard'})});
+    } else {
+      await api('/api/resolve', {method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({id: CURRENT.id,
+                              decision: decision === 'approved' ? 'approve' : 'retract'})});
+    }
+    drawer.querySelector('h2').textContent =
+      decision === 'approved' ? 'Promise approved'
+      : decision === 'retracted' ? 'Promise retracted' : 'Promise archived';
+    drawer.querySelector('.drawer-quote').textContent =
+      decision === 'approved'
+        ? 'Promoted to confirmed memory. COLD audit event written.'
+        : 'Removed from active commitments. COLD audit event written.';
+    box.style.display = 'none';
+    await refresh();
+  } catch (err) {
+    drawer.querySelector('.drawer-quote').textContent = 'Could not resolve: ' + err.message;
+  } finally {
+    box.classList.remove('busy');
+  }
+}
+
+/* ---- ingestion ---- */
+async function runIngest(){
+  const client = document.getElementById('ingest-client').value.trim();
+  const text   = document.getElementById('ingest-text').value;
+  const out    = document.getElementById('ingest-result');
+  const btn    = document.getElementById('ingest-run');
+
+  btn.classList.add('busy');
+  out.innerHTML = '<div class="state">Routing…</div>';
+  try {
+    const d = await api('/api/ingest', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({client, transcript: text})});
+
+    const tally = Object.entries(d.tally).map(([k,v]) => v + ' ' + k).join(', ');
+    out.innerHTML = `<div class="state" style="padding:14px 0;text-align:left">` +
+      `Routed ${d.routed.length} lines → ${esc(tally)}</div>` +
+      d.routed.map(r => {
+        const tier = r.status === 'flagged' ? 'FLAGGED' : r.tier;
+        return `<div class="routed-row">` +
+          `<span class="tag${r.status==='flagged'?' flag':''}">${esc(tier)}</span>` +
+          `<div><div class="txt">${esc(r.text)}</div><p>${esc(r.reason)}</p></div></div>`;
+      }).join('');
+    await refresh();
+  } catch (err) {
+    out.innerHTML = '<div class="state err">' + esc(err.message) + '</div>';
+  } finally {
+    btn.classList.remove('busy');
+  }
+}
+
+/* ---- search ---- */
+let searchTimer;
+document.getElementById('search').addEventListener('input', e => {
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim();
+  searchTimer = setTimeout(async () => {
+    if (!q) return refresh();
+    try {
+      const d = await api('/api/search?q=' + encodeURIComponent(q));
+      const host = document.getElementById('activity');
+      host.innerHTML = d.results.length
+        ? d.results.map(r => `<div class="activity-row"><time>${esc(r.category)}</time>` +
+            `<div><strong${r.status==='flagged'?' style="color:var(--flag)"':''}>` +
+            `${esc(r.id)}</strong><p>${esc((r.name||'').slice(0,72))}</p></div>` +
+            `<span class="tag${r.status==='flagged'?' flag':''}">` +
+            `${esc(String(r.status||'').toUpperCase())}</span></div>`).join('')
+        : '<div class="state">Nothing in active memory matches “' + esc(q) + '”.</div>';
+    } catch (err) {
+      document.getElementById('activity').innerHTML =
+        '<div class="state err">' + esc(err.message) + '</div>';
+    }
+  }, 220);
+});
 </script>
 </body>
 </html>

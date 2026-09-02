@@ -74,10 +74,20 @@ async def overview(request: Request) -> JSONResponse:
         else:
             ceiling_error = None
 
+        # Sibyl exposes no list_archived, so the count comes from the COLD
+        # journal, which records every archive as it happens. That makes
+        # the number a read of the timeline rather than a separate tally
+        # Troth would have to keep in sync.
+        archived = sum(
+            1 for e in M.timeline(m, limit=500)             # SIBYL COLD
+            if (e.get("extra") or {}).get("kind") == "client_archived"
+        )
+
         return JSONResponse({
             "clients": len(clients),
             "promises": len(promises),
             "flagged": len(flagged),
+            "archived": archived,
             "max_discount_pct": ceiling,
             "policy_error": ceiling_error,
             "flagged_items": [_node(p) for p in flagged],
