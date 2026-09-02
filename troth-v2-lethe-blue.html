@@ -84,6 +84,12 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
 .filename{color:#62635d;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .filename.has{color:var(--warm)}
 .sideitem{user-select:none}
+.exportbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:#101F2D;border-radius:15px;padding:16px 18px;margin-bottom:10px;box-shadow:0 0 0 1px var(--hair)}
+.exportcopy b{font-size:12px}.exportcopy p{margin:5px 0 0;color:#6d6e68;font-size:10px}
+.exportctl{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.exportctl label{font:9px "DM Mono";color:#62635d;letter-spacing:.09em;display:flex;align-items:center;gap:6px}
+.exportctl input,.exportctl select{background:#0C1927;border:1px solid var(--hair);border-radius:9px;padding:9px 11px;color:#c9c8c2;font-size:11px;outline:0;color-scheme:dark}
+.exportctl input:focus,.exportctl select:focus{border-color:rgba(215,255,178,.35)}
 @keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
 @keyframes artIn{from{opacity:0;transform:scale(.92) rotate(-3deg)}to{opacity:1;transform:none}}
 @keyframes spin{to{transform:rotate(360deg)}}@keyframes float{50%{transform:translateY(-9px)}}@keyframes scan{0%,100%{transform:translateY(0);opacity:0}20%{opacity:.8}70%{transform:translateY(590px);opacity:.2}}
@@ -173,7 +179,7 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
   <div class="dash-layout">
     <aside class="sidebar">
       <div class="side-label mono">WORKSPACE</div>
-      <div class="sideitem active" data-view="overview">Overview</div><div class="sideitem" data-view="memory">Memory</div><div class="sideitem" data-view="deals">Deals</div><div class="sideitem" data-view="promises">Promises</div><div class="sideitem" data-view="clients">Clients</div><div class="sideitem" data-view="flags">Flags <span id="side-flags" style="float:right;color:var(--flag)">—</span></div>
+      <div class="sideitem active" data-view="overview">Overview</div><div class="sideitem" data-view="memory">Memory</div><div class="sideitem" data-view="deals">Deals</div><div class="sideitem" data-view="commitments">Commitments <span id="side-overdue" style="float:right;color:var(--flag)"></span></div><div class="sideitem" data-view="promises">Promises</div><div class="sideitem" data-view="clients">Clients</div><div class="sideitem" data-view="flags">Flags <span id="side-flags" style="float:right;color:var(--flag)">—</span></div>
       <div style="height:28px"></div><div class="side-label mono">SYSTEM</div>
       <div class="sideitem" data-view="ingestion">Ingestion</div><div class="sideitem" data-view="policies">Policies</div><div class="sideitem" data-view="audit">Audit trail</div>
     </aside>
@@ -183,7 +189,19 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
         <div class="statbox"><span class="change">WARM</span><small>ACTIVE CLIENTS</small><strong id="stat-clients">—</strong></div>
         <div class="statbox"><span class="change">WARM</span><small>TRACKED PROMISES</small><strong id="stat-promises">—</strong></div>
         <div class="statbox"><span class="change" id="stat-flag-label" style="color:var(--flag)">—</span><small>FLAGGED</small><strong id="stat-flagged" style="color:var(--flag)">—</strong></div>
-        <div class="statbox"><span class="change">COLD AUDIT</span><small>ARCHIVED</small><strong id="stat-archived">—</strong></div>
+        <div class="statbox"><span class="change" id="stat-overdue-label">—</span><small>COMMITMENTS</small><strong id="stat-commitments">—</strong></div>
+      </div>
+      <div class="exportbar">
+        <div class="exportcopy"><b>Export what's owed</b><p id="export-summary">—</p></div>
+        <div class="exportctl">
+          <label>FROM <input type="date" id="export-from"></label>
+          <label>TO <input type="date" id="export-to"></label>
+          <select id="export-scope">
+            <option value="commitments">Commitments</option>
+            <option value="all">Everything (5 sheets)</option>
+          </select>
+          <button class="cta" onclick="runExport()">Export .xlsx</button>
+        </div>
       </div>
       <div id="view-overview">
       <div class="dashgrid">
@@ -299,9 +317,18 @@ async function refresh(){
   document.getElementById('stat-clients').textContent  = d.clients;
   document.getElementById('stat-promises').textContent = d.promises;
   document.getElementById('stat-flagged').textContent  = String(d.flagged).padStart(2,'0');
-  document.getElementById('stat-archived').textContent = String(d.archived).padStart(2,'0');
+  document.getElementById('stat-commitments').textContent = String(d.commitments).padStart(2,'0');
   document.getElementById('stat-flag-label').textContent = d.flagged ? 'NEEDS REVIEW' : 'CLEAR';
+  document.getElementById('stat-overdue-label').textContent =
+    d.overdue ? d.overdue + ' OVERDUE' : 'ON TRACK';
+  document.getElementById('stat-overdue-label').style.color =
+    d.overdue ? 'var(--flag)' : '';
   document.getElementById('side-flags').textContent = d.flagged || '';
+  document.getElementById('side-overdue').textContent = d.overdue || '';
+  document.getElementById('export-summary').textContent =
+    d.commitments + ' open commitment' + (d.commitments === 1 ? '' : 's') +
+    (d.overdue ? ' · ' + d.overdue + ' overdue' : '') +
+    ' · leave the dates blank for everything';
 
   renderMap(d);
   renderActivity(d.events);
@@ -578,6 +605,46 @@ document.getElementById('ingest-file').addEventListener('change', e => {
   };
   reader.readAsText(file);
 });
+
+/* ---- export: the browser asks the server to build it from memory now ---- */
+async function runExport(){
+  const from  = document.getElementById('export-from').value;
+  const to    = document.getElementById('export-to').value;
+  const scope = document.getElementById('export-scope').value;
+  const summary = document.getElementById('export-summary');
+
+  if (from && to && from > to) {
+    summary.textContent = 'that range ends before it starts';
+    return;
+  }
+
+  const qs = new URLSearchParams({scope});
+  if (from) qs.set('from', from);
+  if (to)   qs.set('to', to);
+
+  const prev = summary.textContent;
+  summary.textContent = 'building the workbook…';
+  try {
+    const res = await fetch('/api/export.xlsx?' + qs.toString());
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({detail: res.status}));
+      throw new Error(err.detail || res.status);
+    }
+    const blob = await res.blob();
+    const name = (res.headers.get('Content-Disposition') || '')
+      .match(/filename="([^"]+)"/)?.[1] || 'troth-export.xlsx';
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    summary.textContent = 'downloaded ' + name;
+    setTimeout(() => { summary.textContent = prev; }, 4000);
+  } catch (err) {
+    summary.textContent = 'export failed: ' + err.message;
+  }
+}
 
 /* ---- search ---- */
 let searchTimer;

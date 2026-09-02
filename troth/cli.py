@@ -11,6 +11,8 @@ from __future__ import annotations
 import argparse
 import sys
 
+from . import commitments as C
+from . import export as X
 from . import ingest as I
 from . import memory as M
 
@@ -72,6 +74,14 @@ def cmd_brief(args, m) -> int:
     except M.MemoryUnavailable as exc:
         _out(f"POLICY   UNAVAILABLE - {exc}")
 
+    owed = [r for r in X.commitment_rows(m) if r["client"] == args.client]
+    if owed:
+        _out()
+        _out(f"{len(owed)} open commitment(s):")
+        for r in owed:
+            mark = "!" if r["urgency"] in ("OVERDUE", "DUE") else " "
+            _out(f"  {mark} {r['detail']:24} {r['commitment'][:60]}")
+
     flagged = [p for p in M.flagged_promises(m)
                if (p.get("body") or {}).get("deal") == args.client]
     if flagged:
@@ -121,6 +131,28 @@ def cmd_archive(args, m) -> int:
     return 0
 
 
+def cmd_due(args, m) -> int:
+    rows = X.commitment_rows(m)
+    if not rows:
+        _out("Nothing outstanding.")
+        return 0
+    for r in rows:
+        mark = "!" if r["urgency"] in ("OVERDUE", "DUE") else " "
+        _out(f"{mark} {str(r['due'] or '—'):11} {r['urgency']:8} "
+             f"{r['client']:14} {r['commitment'][:52]}")
+        _out(f"  {'':11} {r['detail']}")
+    return 0
+
+
+def cmd_export(args, m) -> int:
+    from datetime import date as _date
+    parse = lambda v: _date.fromisoformat(v) if v else None
+    wb = X.build_workbook(m, args.scope, parse(args.date_from), parse(args.date_to))
+    wb.save(args.out)
+    _out(f"Wrote {args.out}  (scope: {args.scope})")
+    return 0
+
+
 def cmd_serve(args, m) -> int:
     from . import server
     _out(f"Troth on http://{args.host}:{args.port}  (ctrl-c to stop)")
@@ -159,6 +191,16 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("client")
     s.add_argument("--reason", required=True)
     s.set_defaults(func=cmd_archive)
+
+    s = sub.add_parser("due", help="open commitments, soonest first")
+    s.set_defaults(func=cmd_due)
+
+    s = sub.add_parser("export", help="write an .xlsx of what is owed")
+    s.add_argument("--out", default="troth-export.xlsx")
+    s.add_argument("--scope", choices=["commitments", "all"], default="commitments")
+    s.add_argument("--from", dest="date_from", help="earliest due date (YYYY-MM-DD)")
+    s.add_argument("--to", dest="date_to", help="latest due date (YYYY-MM-DD)")
+    s.set_defaults(func=cmd_export)
 
     s = sub.add_parser("serve", help="run the dashboard")
     s.add_argument("--host", default="127.0.0.1")

@@ -1,0 +1,12 @@
+Rep: Hey - quick sync on the Orbital Systems deal.
+Ada: Sure. We're Orbital Systems, I'm the CFO, contract's up for renewal in November.
+Rep: Company policy caps discounts at 10% without director sign-off.
+Rep: Actually our standard policy allows a 20% discount for multi-year commitments.
+Rep: Given the size of this one I can offer you 30% off if you sign before the quarter ends.
+Ada: That's a big number. Send it over.
+Rep: I'll put together the paperwork by 15 September.
+Ada: We might also add the analytics module, still deciding.
+Rep: I'll get back to you at some point on the analytics pricing.
+Rep: I'll waive the onboarding fee too.
+Ada: Great.
+ok

@@ -12,6 +12,7 @@ point.
 
 from __future__ import annotations
 
+import datetime
 import json
 import pathlib
 import traceback
@@ -20,13 +21,28 @@ from typing import Any
 import uvicorn
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import FileResponse, JSONResponse
+from starlette.responses import FileResponse, JSONResponse, Response
 from starlette.routing import Route
 
+from . import commitments as C
+from . import export as X
 from . import ingest as I
 from . import memory as M
 
-UI_FILE = pathlib.Path(__file__).resolve().parent.parent / "troth-v2-lethe-blue.html"
+def _find_ui() -> pathlib.Path | None:
+    """The dashboard lives at the repo root as a design asset rather than
+    inside the package. Look there first, then beside the package, so an
+    editable install and a plain `python -m troth.cli` both find it."""
+    here = pathlib.Path(__file__).resolve().parent
+    for candidate in (here.parent / "troth-v2-lethe-blue.html",
+                      here / "troth-v2-lethe-blue.html",
+                      pathlib.Path.cwd() / "troth-v2-lethe-blue.html"):
+        if candidate.exists():
+            return candidate
+    return None
+
+
+UI_FILE = _find_ui()
 
 # Which Sibyl tier each entity category is rendered as in the UI.
 CATEGORY_TIER = {"client": "WARM", "promise": "WARM"}
@@ -88,6 +104,9 @@ async def overview(request: Request) -> JSONResponse:
             "promises": len(promises),
             "flagged": len(flagged),
             "archived": archived,
+            "commitments": len(M.list_commitments(m)),      # SIBYL WARM
+            "overdue": sum(1 for r in X.commitment_rows(m)
+                           if r["urgency"] == "OVERDUE"),
             "max_discount_pct": ceiling,
             "policy_error": ceiling_error,
             "flagged_items": [_node(p) for p in flagged],
@@ -217,6 +236,20 @@ async def view(request: Request) -> JSONResponse:
                                  "note": "Awaiting a human decision. Troth will not "
                                          "repeat any of these as fact.", "rows": rows})
 
+        if name == "commitments":
+            rows = []
+            for r in X.commitment_rows(m):
+                rows.append(_row(
+                    "FLAGGED" if r["urgency"] == "OVERDUE" else "WARM",
+                    r["commitment"],
+                    f'{r["client"]} · said "{r["said"] or "no date"}" · {r["detail"]}',
+                    r["due"].isoformat() if r["due"] else "—", r["urgency"],
+                ))
+            return JSONResponse({"title": "Commitments",
+                                 "note": "What Troth is owed and owes, by due date. "
+                                         "Undated commitments are kept, not hidden — "
+                                         "they are the ones that slip.", "rows": rows})
+
         if name == "deals":
             rows = [_row("HOT", d["client"], f"stage: {d.get('stage','unknown')}", "")
                     for d in M.list_deals(m)]                # SIBYL HOT
@@ -267,10 +300,39 @@ async def view(request: Request) -> JSONResponse:
         return _fail(exc)
 
 
+def _qdate(request: Request, key: str):
+    raw = request.query_params.get(key)
+    if not raw:
+        return None
+    try:
+        return datetime.date.fromisoformat(raw[:10])
+    except ValueError:
+        return None
+
+
+async def export_xlsx(request: Request) -> Any:
+    """Build the workbook on the spot from whatever is in memory now."""
+    m = request.app.state.memory
+    scope = request.query_params.get("scope", "commitments")
+    try:
+        wb = X.build_workbook(m, scope, _qdate(request, "from"), _qdate(request, "to"))
+        stamp = datetime.date.today().isoformat()
+        return Response(
+            X.to_bytes(wb),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition":
+                     f'attachment; filename="troth-{scope}-{stamp}.xlsx"'},
+        )
+    except Exception as exc:  # noqa: BLE001
+        traceback.print_exc()
+        return _fail(exc)
+
+
 async def ui(request: Request) -> Any:
-    if not UI_FILE.exists():
+    if UI_FILE is None:
         return JSONResponse(
-            {"error": "ui_missing", "detail": f"{UI_FILE.name} not found"},
+            {"error": "ui_missing",
+             "detail": "troth-v2-lethe-blue.html not found. Run from the repo root."},
             status_code=404,
         )
     return FileResponse(UI_FILE)
@@ -284,6 +346,7 @@ def build_app(db_path: str | None = None) -> Starlette:
         Route("/api/resolve", resolve, methods=["POST"]),
         Route("/api/search", search),
         Route("/api/view/{name}", view),
+        Route("/api/export.xlsx", export_xlsx),
     ])
     app.state.memory = M.connect(db_path)
     return app

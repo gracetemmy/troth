@@ -316,6 +316,62 @@ def flagged_promises(memory: MemoryClient) -> list:
 
 
 # ---------------------------------------------------------------------
+# Dated commitments — WARM entities that come due
+# ---------------------------------------------------------------------
+
+OPEN = "open"
+KEPT = "kept"
+
+
+def remember_commitment(
+    memory: MemoryClient,
+    deal_id: str,
+    text: str,
+    due: Any = None,
+    phrase: str = "",
+    precision: str = "",
+    made_by: str | None = None,
+) -> dict:
+    """Persist something someone said they would do, and by when.
+
+    Stored as a WARM entity rather than HOT state because a commitment
+    outlives the deal stage it was made in — the deal can move on while
+    the quote you promised is still owed.
+    """
+    name = f"{deal_id}:{_stable_id(text)}"
+    body = {
+        "deal": deal_id,
+        "text": text,
+        "due": due.isoformat() if hasattr(due, "isoformat") else due,
+        "phrase": phrase,
+        "precision": precision,
+        "made_by": made_by,
+    }
+    memory.set_entity("commitment", name, body, status=OPEN)  # SIBYL WARM
+    log_interaction(memory, deal_id, "commitment_made",
+                    f"{text} — {phrase or 'no date'}")
+    return {"id": name, "status": OPEN, **body}
+
+
+def list_commitments(memory: MemoryClient, status: str | None = OPEN) -> list:
+    return list(memory.list_entities("commitment", status=status))  # SIBYL WARM
+
+
+def complete_commitment(memory: MemoryClient, commitment_id: str,
+                        note: str | None = None) -> dict:
+    record = _absent_is_none(memory.get_entity, "commitment", commitment_id)  # SIBYL WARM
+    if not record:
+        raise KeyError(f"no commitment {commitment_id!r} in memory")
+    body = dict(record.get("body") or {})
+    body["closed_note"] = note
+    memory.set_entity("commitment", commitment_id, body, status=KEPT)  # SIBYL WARM
+    log_interaction(memory, body.get("deal", "unknown"), "commitment_kept",
+                    f"{body.get('text','')} marked done"
+                    + (f": {note}" if note else ""))
+    return {"id": commitment_id, "status": KEPT, **body}
+
+
+# ---------------------------------------------------------------------
 # ARCHIVE — retired relationships the agent must not re-pitch
 # ---------------------------------------------------------------------
 

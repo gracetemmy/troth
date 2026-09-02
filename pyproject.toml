@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "troth"
+version = "0.1.0"
+description = "A sales copilot that remembers what was promised, and refuses to repeat a promise it hasn't verified. Built on Sibyl Memory."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "gracetemmy" }]
+keywords = ["sibyl-memory", "agent-memory", "sales", "crm"]
+
+dependencies = [
+    "sibyl-memory-client>=0.8.0",
+    "starlette>=0.37",
+    "uvicorn>=0.27",
+    "openpyxl>=3.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+troth = "troth.cli:main"
+
+[project.urls]
+Repository = "https://github.com/gracetemmy/troth"
+
+[tool.setuptools]
+packages = ["troth"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

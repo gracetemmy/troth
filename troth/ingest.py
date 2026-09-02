@@ -18,6 +18,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from . import commitments as C
 from . import memory as M
 
 # Below this, Troth will not promote a line into confirmed memory. An
@@ -33,7 +34,9 @@ SPEAKER_RE = re.compile(r"^([A-Za-z][A-Za-z .'-]{1,24}):\s*(.+)$")
 COMMITMENT_RE = re.compile(
     r"\b(i|we|i'll|we'll|i can|we can|i could|we could)\b.{0,40}?"
     r"\b(offer|give|do|get|waive|throw in|include|extend|guarantee|"
-    r"promise|commit|send|deliver|ship|honou?r|match|cover)\b",
+    r"promise|commit|send|deliver|ship|honou?r|match|cover|check in|"
+    r"follow up|circle back|get back|call|email|review|confirm|write up|"
+    r"put together|draft|revert|revise|prepare|share|loop back)\b",
     re.I,
 )
 POLICY_RE = re.compile(
@@ -120,7 +123,18 @@ def classify(text: str, speaker: str | None = None) -> Item:
         # promise and a client may well hold you to it, but the speaker
         # did not actually commit. It goes in at low confidence so the
         # floor sends it to a human rather than into confirmed memory.
-        return Item("promise", text, 0.5 if hedged else 0.85, speaker)
+        if hedged:
+            return Item("promise", text, 0.5, speaker)
+
+        # Split by what the commitment is *about*. A price claim can be
+        # checked against standing policy. A dated deliverable cannot —
+        # there is nothing to check it against, it simply comes due. They
+        # need different handling, so they are different kinds here.
+        if M.extract_discount_pct(text) is not None:
+            return Item("promise", text, 0.85, speaker)
+        if C.extract_due(text) is not None:
+            return Item("commitment", text, 0.85, speaker)
+        return Item("promise", text, 0.85, speaker)
 
     if hedged:
         # Hedged but not promise-shaped: "we might expand next quarter".
@@ -184,11 +198,43 @@ def ingest_document(
                     item.text, status=M.FLAGGED, record_id=pid,
                 ))
             else:
-                checked = M.flag_promise(memory, deal_id, item.text, item.speaker)
-                result.routed.append(Routed(
-                    "WARM", "flag_promise()", checked["reason"], item.text,
-                    status=checked["status"], record_id=checked["id"],
-                ))
+                try:
+                    checked = M.flag_promise(memory, deal_id, item.text, item.speaker)
+                except M.MemoryUnavailable as exc:
+                    # No standing policy in memory to check against. Troth
+                    # still will not confirm the promise — but one
+                    # uncheckable line must not abort the whole transcript
+                    # and lose everything already written. Flag it and keep
+                    # going.
+                    pid = f"{deal_id}:{M._stable_id(item.text)}"
+                    memory.set_entity(  # SIBYL WARM
+                        "promise", pid,
+                        {"deal": deal_id, "text": item.text, "made_by": item.speaker,
+                         "reason": "no standing policy in memory to check against"},
+                        status=M.FLAGGED,
+                    )
+                    M.log_interaction(memory, deal_id, "promise_flagged", item.text)
+                    result.routed.append(Routed(
+                        "WARM", "flag_promise()",
+                        f"unverifiable — {exc.args[0].split('.')[0].lower()}",
+                        item.text, status=M.FLAGGED, record_id=pid,
+                    ))
+                else:
+                    result.routed.append(Routed(
+                        "WARM", "flag_promise()", checked["reason"], item.text,
+                        status=checked["status"], record_id=checked["id"],
+                    ))
+
+        elif item.kind == "commitment":
+            due, phrase, precision = C.extract_due(item.text)
+            rec = M.remember_commitment(memory, deal_id, item.text, due,
+                                        phrase, precision, item.speaker)
+            urgency = C.describe(due, precision)
+            result.routed.append(Routed(
+                "WARM", "remember_commitment()",
+                f"deliverable — {phrase or 'no date'} ({urgency})",
+                item.text, status=C.status_for(due, precision), record_id=rec["id"],
+            ))
 
         elif item.kind == "client_fact":
             existing = M.get_client(memory, client_id) or {}
