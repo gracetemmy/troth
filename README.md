@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/troth-mark.svg" alt="Troth" width="132" />
+
 # Troth
 
 [![MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
@@ -22,8 +24,29 @@ Built for the **[Sibyl Labs Hackathon](https://hack.sibyllabs.org)** · Sep 1–
 
 ---
 
+## The load-bearing moment, in one picture
+
+A rep offered 25% off. The standing ceiling in REFERENCE says 15%. Troth read that ceiling **at the moment the promise was made**, downgraded the promise to `flagged`, and will not repeat it as an agreed fact until a human approves or retracts it.
+
+![A flagged promise, checked against live policy](docs/screenshots/03-flagged-promise.png)
+
+| Trust overview | Commitments, by due date |
+|---|---|
+| ![Dashboard](docs/screenshots/02-dashboard.png) | ![Commitments](docs/screenshots/04-commitments.png) |
+| Every figure is read from Sibyl on request — no cache, no snapshot table | Parsed deadlines, with vague ones kept as `UNDATED` rather than invented |
+
+| Ingestion | COLD audit trail |
+|---|---|
+| ![Ingest](docs/screenshots/05-ingest.png) | ![Audit](docs/screenshots/06-audit.png) |
+| Paste or upload a transcript; every line is routed and shown with its reason | Append-only. Every write Troth has made, in order |
+
+Deep links work throughout: `#dashboard/commitments` opens a view, and `#promise/<id>` opens one flagged promise — a shareable link to the exact thing needing a decision.
+
+---
+
 ## Table of contents
 
+- [The load-bearing moment, in one picture](#the-load-bearing-moment-in-one-picture)
 - [What it does](#what-it-does)
 - [Where memory is load-bearing](#where-memory-is-load-bearing)
 - [Verify it yourself in 60 seconds](#verify-it-yourself-in-60-seconds)
@@ -277,6 +300,7 @@ troth/
 └── cli.py           ← seed · ingest · brief · due · flags · resolve · archive · export · serve
 tests/               ← 70 tests against a real Sibyl database
 examples/            ← 5 sample transcripts + 2 deliberate edge cases
+docs/screenshots/    ← captured from the running app, not mocked up
 troth-v2-lethe-blue.html   ← the dashboard
 ```
 

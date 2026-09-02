@@ -606,6 +606,41 @@ document.getElementById('ingest-file').addEventListener('change', e => {
   reader.readAsText(file);
 });
 
+/* ---- deep links ----
+   #dashboard              the overview
+   #dashboard/commitments  any sidebar view
+   #promise/<id>           straight to one flagged promise, shareable
+------------------------------------------------------------------- */
+async function applyHash(){
+  const hash = decodeURIComponent(location.hash.replace(/^#/, ''));
+  if (!hash) return;
+
+  const [head, ...rest] = hash.split('/');
+  const tail = rest.join('/');
+
+  if (head === 'ingest') { openDashboard(); await refresh(); return openIngest(); }
+  if (head !== 'dashboard' && head !== 'promise') return;
+
+  openDashboard();
+
+  if (head === 'promise' && tail) {
+    await refresh();
+    const hit = (STATE.nodes || []).find(n => n.id === tail);
+    if (hit) return showRecord(hit);
+    return;
+  }
+
+  if (tail) {
+    const item = [...document.querySelectorAll('.sideitem')]
+      .find(i => i.dataset.view === tail);
+    return showView(tail, item);
+  }
+  await refresh();
+}
+window.addEventListener('hashchange', applyHash);
+window.addEventListener('DOMContentLoaded', applyHash);
+if (document.readyState !== 'loading') applyHash();
+
 /* ---- export: the browser asks the server to build it from memory now ---- */
 async function runExport(){
   const from  = document.getElementById('export-from').value;
