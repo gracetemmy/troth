@@ -46,6 +46,8 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
 .promise-card blockquote{font-size:23px;line-height:1.35;letter-spacing:-.03em;margin:24px 0}.promise-status{display:flex;align-items:center;gap:8px;color:var(--flag);font:10px "DM Mono";padding-top:15px;border-top:1px solid var(--hair)}
 .evidence{position:absolute;width:125px;height:125px;border-radius:50%;background:#142535;box-shadow:0 18px 50px #000,0 0 0 1px rgba(255,255,255,.08);display:grid;place-items:center;text-align:center;z-index:3}.ev1{left:13%;top:18%;color:var(--warm)}.ev2{right:13%;top:18%;color:var(--ref)}.ev3{left:15%;bottom:16%;color:var(--cold)}.ev4{right:14%;bottom:14%;color:var(--flag)}.evidence b{display:block;font:10px "DM Mono";margin-top:5px}.evline{position:absolute;height:1px;background:linear-gradient(90deg,transparent,#8b9d80,transparent);width:260px;left:25%;top:35%;transform:rotate(18deg);opacity:.6}.evline2{left:auto;right:25%;transform:rotate(162deg)}.evline3{top:auto;bottom:35%;transform:rotate(-18deg)}.evline4{top:auto;left:auto;right:25%;bottom:35%;transform:rotate(198deg)}
 .tiers{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:70px}.tier{padding:18px 15px;min-height:145px;background:#101F2D;border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.25),0 0 0 1px rgba(255,255,255,.06);transition:transform .2s var(--ease-out),background .2s var(--ease-out)}.tier:hover{transform:translateY(-5px);background:#162737}.tier .dot{width:7px;height:7px;border-radius:50%;display:block;margin-bottom:35px}.tier h3{font-size:14px;margin:0 0 7px}.tier p{font-size:11px;line-height:1.5;color:#74756f;margin:0}.dot.hot{background:var(--hot)}.dot.warm{background:var(--warm)}.dot.cold{background:var(--cold)}.dot.ref{background:var(--ref)}.dot.flag{background:var(--flag)}.dot.arch{background:#777}
+.tier h3 sup{color:var(--flag);font-size:9px;margin-left:1px}
+.tier-footnote{margin-top:18px;font-size:11px;line-height:1.6;max-width:760px}
 .how{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:65px}.how-card{min-height:330px;padding:28px;border-radius:20px;background:#101F2D;box-shadow:0 20px 60px rgba(0,0,0,.25),0 0 0 1px var(--hair);position:relative;overflow:hidden}.how-num{font:11px "DM Mono";color:#64655f}.how-card h3{font-size:27px;letter-spacing:-.04em;margin:100px 0 12px}.how-card p{color:#7f807a;line-height:1.6;max-width:390px}.scan{position:absolute;left:0;right:0;top:0;height:1px;background:#d7ffb2;box-shadow:0 0 25px #d7ffb2;animation:scan 3.2s ease-in-out infinite}
 .footer{padding:70px 0 100px;display:flex;justify-content:space-between;color:#666761;font-size:11px;border-top:1px solid var(--hair)}
 /* dashboard */
@@ -111,15 +113,16 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
       </section>
 
       <section class="section" id="memory">
-        <div class="section-intro"><div class="mono muted">02 · Six memory tiers</div><div><h2>Not a database. A living evidence field.</h2><p class="section-lead">Troth routes each piece of relationship memory into the tier where it belongs. FLAGGED is the trust gate: uncertain content stays out of confirmed memory until a human resolves it.</p></div></div>
+        <div class="section-intro"><div class="mono muted">02 · Five Sibyl tiers, one trust label</div><div><h2>Not a database. A living evidence field.</h2><p class="section-lead">Sibyl Memory ships five tiers. Troth routes each piece of relationship memory into the one where it belongs, then adds a trust label of its own on top: FLAGGED is not a Sibyl tier, it is a status Troth writes onto a WARM entity. Uncertain content stays out of confirmed memory until a human resolves it.</p></div></div>
         <div class="tiers">
           <div class="tier"><i class="dot hot"></i><h3>HOT</h3><p>Active deal, objections, next action.</p></div>
           <div class="tier"><i class="dot warm"></i><h3>WARM</h3><p>Confirmed facts, pricing, signed scope.</p></div>
           <div class="tier"><i class="dot cold"></i><h3>COLD</h3><p>Timestamped calls, emails, decisions.</p></div>
           <div class="tier"><i class="dot ref"></i><h3>REFERENCE</h3><p>Standing pricing and policy rules.</p></div>
-          <div class="tier"><i class="dot flag"></i><h3>FLAGGED</h3><p>Unconfirmed or conflicting promises.</p></div>
+          <div class="tier"><i class="dot flag"></i><h3>FLAGGED<sup>*</sup></h3><p>Unconfirmed or conflicting promises.</p></div>
           <div class="tier"><i class="dot arch"></i><h3>ARCHIVE</h3><p>Closed relationships and proof.</p></div>
         </div>
+        <p class="tier-footnote mono muted">* FLAGGED is Troth's own status field on Sibyl's WARM tier, not a sixth Sibyl tier. The five above are Sibyl Memory's real schema.</p>
       </section>
 
       <section class="section" id="architecture">
