@@ -5,10 +5,10 @@
 # Troth
 
 [![MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
-![tests](https://img.shields.io/badge/tests-70%20passing-2FA46A)
-![memory](https://img.shields.io/badge/Sibyl%20Memory-5%20tiers%2C%20all%20load--bearing-D7FFB2)
-![python](https://img.shields.io/badge/Python-3.10%2B-5FD8E8)
-![stack](https://img.shields.io/badge/Starlette%20·%20SQLite%20FTS5%20·%20openpyxl-1f1f23)
+![tests](https://img.shields.io/badge/tests-70_passing-2FA46A)
+![memory](https://img.shields.io/badge/Sibyl_Memory-5_tiers,_all_load--bearing-D7FFB2)
+![python](https://img.shields.io/badge/Python-3.10+-5FD8E8)
+![stack](https://img.shields.io/badge/Starlette_·_SQLite_FTS5_·_openpyxl-1f1f23)
 
 ### *A pledged word.*
 
