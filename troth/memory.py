@@ -142,6 +142,27 @@ def current_max_discount(memory: MemoryClient) -> float:
     )
 
 
+POLICY_NAMESPACE = "pricing"
+
+
+def list_policies(memory: MemoryClient) -> list[dict]:
+    """Every standing rule Troth has written.
+
+    Sibyl has no list_references, but its FTS search can be pinned to a
+    single tier. Troth namespaces all of its rules under `pricing.`, so
+    searching that prefix inside the reference tier enumerates them.
+    """
+    out = []
+    for row in memory.search(POLICY_NAMESPACE, tiers=("reference",), limit=100):  # SIBYL REFERENCE
+        body = _unwrap_reference(row.get("body"))
+        out.append({
+            "key": row.get("key"),
+            "value": body.get("value") if isinstance(body, dict) else body,
+            "updated": row.get("ts"),
+        })
+    return sorted(out, key=lambda r: r["key"] or "")
+
+
 # ---------------------------------------------------------------------
 # HOT — the live state of a deal
 # ---------------------------------------------------------------------
@@ -154,6 +175,22 @@ def start_deal(memory: MemoryClient, client_id: str, stage: str, **extra) -> Any
 def get_deal(memory: MemoryClient, client_id: str) -> dict | None:
     record = memory.get_state(f"deal:{client_id}")  # SIBYL HOT
     return record.get("body") if record else None
+
+
+def list_deals(memory: MemoryClient) -> list[dict]:
+    """Every live deal.
+
+    Sibyl has no list_states either. Deal keys are derived from the
+    clients in WARM rather than guessed from a text search, so a client
+    with no deal state simply has none — no false positives from FTS.
+    """
+    out = []
+    for client in memory.list_entities("client"):  # SIBYL WARM
+        name = client.get("name")
+        body = get_deal(memory, name)
+        if body:
+            out.append({"client": name, **body})
+    return out
 
 
 # ---------------------------------------------------------------------

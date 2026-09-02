@@ -78,6 +78,12 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
 .map-node.dyn{cursor:pointer}
 .map-node small{display:block;margin-top:4px;opacity:.72;font-size:8px}
 .busy{opacity:.5;pointer-events:none}
+.list-note{padding:14px 18px 4px;color:#6d6e68;font-size:10px;line-height:1.6;border-bottom:1px solid var(--hair)}
+.filerow{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.filerow .pill{padding:9px 15px;font-size:11px;white-space:nowrap}
+.filename{color:#62635d;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.filename.has{color:var(--warm)}
+.sideitem{user-select:none}
 @keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
 @keyframes artIn{from{opacity:0;transform:scale(.92) rotate(-3deg)}to{opacity:1;transform:none}}
 @keyframes spin{to{transform:rotate(360deg)}}@keyframes float{50%{transform:translateY(-9px)}}@keyframes scan{0%,100%{transform:translateY(0);opacity:0}20%{opacity:.8}70%{transform:translateY(590px);opacity:.2}}
@@ -167,9 +173,9 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
   <div class="dash-layout">
     <aside class="sidebar">
       <div class="side-label mono">WORKSPACE</div>
-      <div class="sideitem active">Overview</div><div class="sideitem">Memory</div><div class="sideitem">Deals</div><div class="sideitem">Promises</div><div class="sideitem">Clients</div><div class="sideitem">Flags <span id="side-flags" style="float:right;color:var(--flag)">—</span></div>
+      <div class="sideitem active" data-view="overview">Overview</div><div class="sideitem" data-view="memory">Memory</div><div class="sideitem" data-view="deals">Deals</div><div class="sideitem" data-view="promises">Promises</div><div class="sideitem" data-view="clients">Clients</div><div class="sideitem" data-view="flags">Flags <span id="side-flags" style="float:right;color:var(--flag)">—</span></div>
       <div style="height:28px"></div><div class="side-label mono">SYSTEM</div>
-      <div class="sideitem">Ingestion</div><div class="sideitem">Policies</div><div class="sideitem">Audit trail</div>
+      <div class="sideitem" data-view="ingestion">Ingestion</div><div class="sideitem" data-view="policies">Policies</div><div class="sideitem" data-view="audit">Audit trail</div>
     </aside>
     <main class="dashmain">
       <div class="dashhead"><div><div class="mono muted" id="dash-date">—</div><h1>Trust overview</h1></div><input class="search" id="search" placeholder="Search active memory…" autocomplete="off"></div>
@@ -179,6 +185,7 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
         <div class="statbox"><span class="change" id="stat-flag-label" style="color:var(--flag)">—</span><small>FLAGGED</small><strong id="stat-flagged" style="color:var(--flag)">—</strong></div>
         <div class="statbox"><span class="change">COLD AUDIT</span><small>ARCHIVED</small><strong id="stat-archived">—</strong></div>
       </div>
+      <div id="view-overview">
       <div class="dashgrid">
         <section class="dashpanel">
           <div class="panel-title"><b>Active memory</b><span class="filter">ALL TIERS · LIVE</span></div>
@@ -194,6 +201,12 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
           </section>
       </div>
       <div class="ingest"><div class="ingest-copy"><b>Have a transcript?</b><p>Drop it into Troth. We'll classify the memory and show you every promise before it becomes fact.</p></div><button class="cta" onclick="openIngest()">+ Ingest memory</button></div>
+      </div>
+      <section class="dashpanel" id="view-list" style="display:none">
+        <div class="panel-title"><b id="list-title">—</b><span class="filter" id="list-count"></span></div>
+        <div class="list-note mono" id="list-note"></div>
+        <div class="activity" id="list-rows"></div>
+      </section>
     </main>
   </div>
 </div>
@@ -206,6 +219,11 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
   <label>CLIENT</label>
   <input id="ingest-client" placeholder="meridian" autocomplete="off">
   <label>TRANSCRIPT</label>
+  <div class="filerow">
+    <button class="pill" type="button" onclick="document.getElementById('ingest-file').click()">Upload file</button>
+    <input type="file" id="ingest-file" accept=".txt,.md,.csv,.log,.vtt,.srt,.json" hidden>
+    <span class="filename mono" id="ingest-filename">no file chosen · or paste below</span>
+  </div>
   <textarea id="ingest-text" placeholder="Rep: Following up after our call.
 Dara: We're Meridian Labs, I'm the CTO here."></textarea>
   <button class="cta" id="ingest-run" onclick="runIngest()">Run ingestion</button>
@@ -461,6 +479,105 @@ async function runIngest(){
     btn.classList.remove('busy');
   }
 }
+
+/* ---- sidebar navigation: each item is a real query ---- */
+const VIEW_TIER_COLOR = tier => `var(${TIER_COLOR[tier] || '--cold'})`;
+
+async function showView(name, el){
+  document.querySelectorAll('.sideitem').forEach(i => i.classList.remove('active'));
+  if (el) el.classList.add('active');
+
+  const overview = document.getElementById('view-overview');
+  const list     = document.getElementById('view-list');
+
+  if (name === 'overview') {
+    overview.style.display = '';
+    list.style.display = 'none';
+    return refresh();
+  }
+  if (name === 'ingestion') {
+    // Ingestion is an action, not a page: show the audit trail behind it
+    // and open the panel that actually does the work.
+    openIngest();
+  }
+
+  overview.style.display = 'none';
+  list.style.display = '';
+  document.getElementById('list-title').textContent = 'Loading…';
+  document.getElementById('list-note').textContent = '';
+  document.getElementById('list-rows').innerHTML = '<div class="state">Reading memory…</div>';
+
+  let d;
+  try {
+    d = await api('/api/view/' + name);
+  } catch (err) {
+    document.getElementById('list-title').textContent = 'Unavailable';
+    document.getElementById('list-rows').innerHTML =
+      '<div class="state err">' + esc(err.message) +
+      '<br><br>Troth has no other store to read from.</div>';
+    return;
+  }
+
+  document.getElementById('list-title').textContent = d.title;
+  document.getElementById('list-count').textContent =
+    d.rows.length + (d.rows.length === 1 ? ' RECORD' : ' RECORDS');
+  document.getElementById('list-note').textContent = d.note || '';
+
+  document.getElementById('list-rows').innerHTML = d.rows.length
+    ? d.rows.map((r, i) => {
+        const flag = r.tier === 'FLAGGED';
+        return `<div class="activity-row" data-i="${i}"` +
+          (r.record ? ' style="cursor:pointer"' : '') + '>' +
+          `<time style="color:${VIEW_TIER_COLOR(r.tier)}">${esc(r.tier)}</time>` +
+          `<div><strong${flag ? ' style="color:var(--flag)"' : ''}>` +
+          `${esc(String(r.primary).slice(0,110))}</strong>` +
+          (r.secondary ? `<p>${esc(String(r.secondary).slice(0,140))}</p>` : '') +
+          `</div><span class="tag${flag ? ' flag' : ''}">` +
+          `${esc(String(r.status || r.meta || '').toUpperCase())}</span></div>`;
+      }).join('')
+    : '<div class="state">Nothing here yet.</div>';
+
+  document.getElementById('list-rows').querySelectorAll('.activity-row').forEach(row => {
+    const rec = d.rows[+row.dataset.i].record;
+    if (rec) row.onclick = () => showRecord(rec);
+  });
+}
+
+document.querySelectorAll('.sideitem').forEach(item => {
+  item.addEventListener('click', () => showView(item.dataset.view, item));
+});
+
+/* ---- file upload: read it here, send the text like any paste ---- */
+document.getElementById('ingest-file').addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0];
+  const label = document.getElementById('ingest-filename');
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    label.textContent = 'that file is over 2 MB — paste the relevant part instead';
+    label.classList.remove('has');
+    e.target.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    document.getElementById('ingest-text').value = reader.result;
+    const n = reader.result.split(String.fromCharCode(10))
+                  .filter(l => l.trim()).length;
+    label.textContent = file.name + ' · ' + n + ' lines loaded';
+    label.classList.add('has');
+    if (!document.getElementById('ingest-client').value.trim()) {
+      document.getElementById('ingest-client').value =
+        file.name.replace(/\.[^.]+$/, '').replace(/[^a-z0-9_-]+/gi, '-').toLowerCase();
+    }
+  };
+  reader.onerror = () => {
+    label.textContent = 'could not read that file';
+    label.classList.remove('has');
+  };
+  reader.readAsText(file);
+});
 
 /* ---- search ---- */
 let searchTimer;

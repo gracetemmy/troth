@@ -165,6 +165,108 @@ async def search(request: Request) -> JSONResponse:
         return _fail(exc)
 
 
+def _row(tier: str, primary: str, secondary: str = "",
+         meta: str = "", status: str | None = None, rec: Any = None) -> dict:
+    return {"tier": tier, "primary": primary, "secondary": secondary,
+            "meta": meta, "status": status, "record": rec}
+
+
+async def view(request: Request) -> JSONResponse:
+    """Backs every sidebar item. Each one is a different question asked of
+    the same five tiers, so they all read live rather than filtering a
+    payload the browser already holds."""
+    m = request.app.state.memory
+    name = request.path_params["name"]
+
+    try:
+        if name == "clients":
+            rows = [
+                _row("WARM", c["name"],
+                     " · ".join((c.get("body") or {}).get("facts", []))[:160]
+                     or "no facts recorded yet",
+                     (c.get("updated_at") or "")[:10], c.get("status"), _node(c))
+                for c in m.list_entities("client")           # SIBYL WARM
+            ]
+            return JSONResponse({"title": "Clients",
+                                 "note": "WARM entities. Archived clients are absent — "
+                                         "Sibyl moves them out of this table entirely.",
+                                 "rows": rows})
+
+        if name == "promises":
+            rows = [
+                _row("FLAGGED" if p.get("status") == M.FLAGGED else "WARM",
+                     (p.get("body") or {}).get("text", p["name"]),
+                     (p.get("body") or {}).get("reason", ""),
+                     (p.get("body") or {}).get("made_by") or "",
+                     p.get("status"), _node(p))
+                for p in m.list_entities("promise")          # SIBYL WARM
+            ]
+            return JSONResponse({"title": "Promises",
+                                 "note": "Every commitment Troth has seen, with the "
+                                         "trust status it carries.", "rows": rows})
+
+        if name == "flags":
+            rows = [
+                _row("FLAGGED", (p.get("body") or {}).get("text", p["name"]),
+                     (p.get("body") or {}).get("reason", ""),
+                     (p.get("body") or {}).get("made_by") or "",
+                     p.get("status"), _node(p))
+                for p in M.flagged_promises(m)               # SIBYL WARM
+            ]
+            return JSONResponse({"title": "Flags",
+                                 "note": "Awaiting a human decision. Troth will not "
+                                         "repeat any of these as fact.", "rows": rows})
+
+        if name == "deals":
+            rows = [_row("HOT", d["client"], f"stage: {d.get('stage','unknown')}", "")
+                    for d in M.list_deals(m)]                # SIBYL HOT
+            return JSONResponse({"title": "Deals",
+                                 "note": "HOT state — the live position on each deal.",
+                                 "rows": rows})
+
+        if name == "policies":
+            rows = [_row("REFERENCE", p["key"], f"value: {p['value']}",
+                         (p.get("updated") or "")[:10])
+                    for p in M.list_policies(m)]             # SIBYL REFERENCE
+            return JSONResponse({"title": "Policies",
+                                 "note": "Standing rules. Every promise is checked "
+                                         "against these at the moment it is made.",
+                                 "rows": rows})
+
+        if name in ("audit", "ingestion"):
+            rows = [
+                _row("COLD", (e.get("acted") or [""])[0],
+                     (e.get("extra") or {}).get("kind", ""),
+                     (e.get("ts") or "")[:19].replace("T", " "))
+                for e in M.timeline(m, limit=200)            # SIBYL COLD
+            ]
+            return JSONResponse({"title": "Audit trail",
+                                 "note": "The COLD journal, append-only. Every write "
+                                         "Troth has made, in order.", "rows": rows})
+
+        if name == "memory":
+            rows = []
+            for c in m.list_entities("client"):              # SIBYL WARM
+                rows.append(_row("WARM", c["name"], "client", "", c.get("status"), _node(c)))
+            for p in m.list_entities("promise"):             # SIBYL WARM
+                rows.append(_row("FLAGGED" if p.get("status") == M.FLAGGED else "WARM",
+                                 (p.get("body") or {}).get("text", p["name"]),
+                                 "promise", "", p.get("status"), _node(p)))
+            for d in M.list_deals(m):                        # SIBYL HOT
+                rows.append(_row("HOT", d["client"], f"deal · {d.get('stage','')}", ""))
+            for p in M.list_policies(m):                     # SIBYL REFERENCE
+                rows.append(_row("REFERENCE", p["key"], f"value: {p['value']}", ""))
+            return JSONResponse({"title": "Memory",
+                                 "note": "Everything Troth holds, across all five "
+                                         "Sibyl tiers.", "rows": rows})
+
+        return JSONResponse({"error": "unknown_view", "detail": name}, status_code=404)
+
+    except Exception as exc:  # noqa: BLE001
+        traceback.print_exc()
+        return _fail(exc)
+
+
 async def ui(request: Request) -> Any:
     if not UI_FILE.exists():
         return JSONResponse(
@@ -181,6 +283,7 @@ def build_app(db_path: str | None = None) -> Starlette:
         Route("/api/ingest", ingest, methods=["POST"]),
         Route("/api/resolve", resolve, methods=["POST"]),
         Route("/api/search", search),
+        Route("/api/view/{name}", view),
     ])
     app.state.memory = M.connect(db_path)
     return app
