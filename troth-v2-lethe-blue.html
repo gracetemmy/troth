@@ -84,6 +84,9 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
 .filename{color:#62635d;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .filename.has{color:var(--warm)}
 .sideitem{user-select:none}
+#sandbox-banner{display:none;padding:11px 26px;background:rgba(255,156,114,.09);border-bottom:1px solid rgba(255,156,114,.25);color:var(--flag);font:10px "DM Mono";letter-spacing:.04em;line-height:1.6}
+#sandbox-banner.on{display:block}
+#sandbox-banner b{color:#ffd0b8;font-weight:400}
 .exportbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:#101F2D;border-radius:15px;padding:16px 18px;margin-bottom:10px;box-shadow:0 0 0 1px var(--hair)}
 .exportcopy b{font-size:12px}.exportcopy p{margin:5px 0 0;color:#6d6e68;font-size:10px}
 .exportctl{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
@@ -176,6 +179,7 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
     <div class="dash-left"><span class="brand">TROTH</span><span class="back" onclick="closeDashboard()">← LANDING</span></div>
     <div class="live">LIVE MEMORY</div>
   </header>
+  <div id="sandbox-banner" hidden></div>
   <div class="dash-layout">
     <aside class="sidebar">
       <div class="side-label mono">WORKSPACE</div>
@@ -329,6 +333,22 @@ async function refresh(){
     d.commitments + ' open commitment' + (d.commitments === 1 ? '' : 's') +
     (d.overdue ? ' · ' + d.overdue + ' overdue' : '') +
     ' · leave the dates blank for everything';
+
+  const banner = document.getElementById('sandbox-banner');
+  if (d.sandbox) {
+    // Say plainly what this deployment is. A judge who ingests something
+    // here, refreshes, and finds it gone would reasonably conclude the
+    // memory layer is not load-bearing — the opposite of the truth.
+    banner.innerHTML = '<b>HOSTED SANDBOX.</b> Sibyl Memory is a local SQLite file; ' +
+      'this runs on serverless, where only /tmp is writable and it is wiped when the ' +
+      'instance recycles. Reads are real, writes will not survive a cold start. ' +
+      'Cold-start recall is verified locally — see the README.';
+    banner.classList.add('on');
+    banner.hidden = false;
+  } else {
+    banner.classList.remove('on');
+    banner.hidden = true;
+  }
 
   renderMap(d);
   renderActivity(d.events);

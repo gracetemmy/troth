@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import os
 import pathlib
 import traceback
 from typing import Any
@@ -34,7 +35,9 @@ def _find_ui() -> pathlib.Path | None:
     inside the package. Look there first, then beside the package, so an
     editable install and a plain `python -m troth.cli` both find it."""
     here = pathlib.Path(__file__).resolve().parent
-    for candidate in (here.parent / "troth-v2-lethe-blue.html",
+    override = os.environ.get("TROTH_UI")
+    for candidate in (pathlib.Path(override) if override else here / "__none__",
+                      here.parent / "troth-v2-lethe-blue.html",
                       here / "troth-v2-lethe-blue.html",
                       pathlib.Path.cwd() / "troth-v2-lethe-blue.html"):
         if candidate.exists():
@@ -109,6 +112,7 @@ async def overview(request: Request) -> JSONResponse:
                            if r["urgency"] == "OVERDUE"),
             "max_discount_pct": ceiling,
             "policy_error": ceiling_error,
+            "sandbox": bool(os.environ.get("TROTH_SANDBOX")),
             "flagged_items": [_node(p) for p in flagged],
             "nodes": [_node(r) for r in clients + promises],
             "events": [

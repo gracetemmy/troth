@@ -25,3 +25,6 @@ Thumbs.db
 
 # export output
 *.xlsx
+
+# the seeded sandbox database is deliberately committed
+!demo/demo-seed.db
