@@ -339,10 +339,8 @@ async function refresh(){
     // Say plainly what this deployment is. A judge who ingests something
     // here, refreshes, and finds it gone would reasonably conclude the
     // memory layer is not load-bearing — the opposite of the truth.
-    banner.innerHTML = '<b>HOSTED SANDBOX.</b> Sibyl Memory is a local SQLite file; ' +
-      'this runs on serverless, where only /tmp is writable and it is wiped when the ' +
-      'instance recycles. Reads are real, writes will not survive a cold start. ' +
-      'Cold-start recall is verified locally — see the README.';
+    banner.innerHTML = '<b>READ-ONLY SANDBOX.</b> ' + esc(d.sandbox_note || '') +
+      ' Everything you can see here was read from a real Sibyl database.';
     banner.classList.add('on');
     banner.hidden = false;
   } else {
@@ -467,6 +465,10 @@ async function resolve(decision){
   if (!CURRENT) return;
   const drawer = document.getElementById('drawer');
   const box = drawer.querySelector('.resolve');
+  if (STATE.sandbox) {
+    drawer.querySelector('.drawer-quote').textContent = STATE.sandbox_note || '';
+    return;
+  }
   box.classList.add('busy');
   try {
     if (decision === 'archived') {
@@ -503,6 +505,10 @@ async function runIngest(){
   const out    = document.getElementById('ingest-result');
   const btn    = document.getElementById('ingest-run');
 
+  if (STATE.sandbox) {
+    out.innerHTML = '<div class="state err">' + esc(STATE.sandbox_note || '') + '</div>';
+    return;
+  }
   btn.classList.add('busy');
   out.innerHTML = '<div class="state">Routing…</div>';
   try {

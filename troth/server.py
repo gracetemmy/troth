@@ -51,6 +51,25 @@ UI_FILE = _find_ui()
 CATEGORY_TIER = {"client": "WARM", "promise": "WARM"}
 
 
+SANDBOX = bool(os.environ.get("TROTH_SANDBOX"))
+
+# What the hosted build says instead of half-writing. Serverless gives us
+# one ephemeral /tmp per instance, so a write here would either fail on
+# the read-only filesystem or succeed and vanish on the next cold start.
+# Both are worse than saying so.
+SANDBOX_NOTE = (
+    "This is the hosted read-only sandbox. Sibyl Memory is a local SQLite "
+    "file, and serverless has no durable disk to put it on — a write here "
+    "would not survive the next cold start. Clone the repo and run "
+    "`troth serve` to write to a real memory that persists."
+)
+
+
+def _sandbox_refusal() -> JSONResponse:
+    return JSONResponse({"error": "read_only_sandbox", "detail": SANDBOX_NOTE},
+                        status_code=503)
+
+
 def _fail(exc: Exception, status: int = 500) -> JSONResponse:
     """Surface the real reason. When Sibyl is missing, the dashboard must
     say so rather than quietly rendering zeros — an empty dashboard looks
@@ -112,7 +131,8 @@ async def overview(request: Request) -> JSONResponse:
                            if r["urgency"] == "OVERDUE"),
             "max_discount_pct": ceiling,
             "policy_error": ceiling_error,
-            "sandbox": bool(os.environ.get("TROTH_SANDBOX")),
+            "sandbox": SANDBOX,
+            "sandbox_note": SANDBOX_NOTE if SANDBOX else None,
             "flagged_items": [_node(p) for p in flagged],
             "nodes": [_node(r) for r in clients + promises],
             "events": [
@@ -131,6 +151,8 @@ async def overview(request: Request) -> JSONResponse:
 
 
 async def ingest(request: Request) -> JSONResponse:
+    if SANDBOX:
+        return _sandbox_refusal()
     m = request.app.state.memory
     try:
         payload = await request.json()
@@ -159,6 +181,8 @@ async def ingest(request: Request) -> JSONResponse:
 
 
 async def resolve(request: Request) -> JSONResponse:
+    if SANDBOX:
+        return _sandbox_refusal()
     m = request.app.state.memory
     try:
         payload = await request.json()

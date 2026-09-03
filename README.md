@@ -8,6 +8,7 @@
 ![tests](https://img.shields.io/badge/tests-70_passing-2FA46A)
 ![memory](https://img.shields.io/badge/Sibyl_Memory-5_tiers,_all_load--bearing-D7FFB2)
 ![python](https://img.shields.io/badge/Python-3.10+-5FD8E8)
+[![live](https://img.shields.io/badge/live-sybl--eosin.vercel.app-5FD8E8)](https://sybl-eosin.vercel.app)
 ![stack](https://img.shields.io/badge/Starlette_·_SQLite_FTS5_·_openpyxl-1f1f23)
 
 ### *A pledged word.*
@@ -16,7 +17,7 @@
 
 Reps lose deals because nobody remembers what was said three calls ago — a discount promised, a deadline agreed, a scope committed to. Troth reads your call transcripts, routes every line into the tier it belongs in, and checks each promise against standing policy **at the moment it is made**. A promise that breaks policy is downgraded to `flagged` and Troth will not repeat it as fact until a human decides. Archive a client and it refuses to brief you on them at all.
 
-**[ The load-bearing moment ↗ ](#where-memory-is-load-bearing)** · **[ Verify it in 60 seconds ↗ ](#verify-it-yourself-in-60-seconds)** · **[ Run it ↗ ](#run-it)** · **[ Honesty table ↗ ](#whats-real-and-whats-not)**
+**[ Live sandbox ↗ ](https://sybl-eosin.vercel.app)** · **[ The load-bearing moment ↗ ](#where-memory-is-load-bearing)** · **[ Verify it in 60 seconds ↗ ](#verify-it-yourself-in-60-seconds)** · **[ Run it ↗ ](#run-it)** · **[ Honesty table ↗ ](#whats-real-and-whats-not)**
 
 Built for the **[Sibyl Labs Hackathon](https://hack.sibyllabs.org)** · Sep 1–10, 2026.
 
@@ -50,6 +51,7 @@ Deep links work throughout: `#dashboard/commitments` opens a view, and `#promise
 - [What it does](#what-it-does)
 - [Where memory is load-bearing](#where-memory-is-load-bearing)
 - [Verify it yourself in 60 seconds](#verify-it-yourself-in-60-seconds)
+- [The hosted sandbox, and what it cannot prove](#the-hosted-sandbox-and-what-it-cannot-prove)
 - [The trust gate](#the-trust-gate)
 - [Commitments — promises about time](#commitments--promises-about-time)
 - [Architecture](#architecture)
@@ -133,6 +135,16 @@ troth brief northstar
 Step 3 is the one that matters most: **the same input produces a different answer because a value in memory changed.** Not logged differently — answered differently.
 
 > Steps 1–3 deliberately use `examples/promise-only.txt`, a single promise line with no policy in it. The fuller transcripts *state their own policy* ("our standard policy allows a 15% early-renewal discount"), which Troth writes to REFERENCE as it reads — so ingesting one of those overwrites the ceiling you just seeded and the promise would not flip. That behaviour is correct; it just makes for a confusing demo.
+
+## The hosted sandbox, and what it cannot prove
+
+**[sybl-eosin.vercel.app](https://sybl-eosin.vercel.app)** — click through the real dashboard, open a flagged promise, download the .xlsx.
+
+It is **read-only**, and that is a property of the host, not of Troth. Sibyl Memory is a local SQLite file; serverless has no durable disk to put one on, so a write there would either fail on the read-only filesystem or succeed and vanish at the next cold start. Rather than let it half-work, the hosted build refuses writes with an explanation and says so in a banner:
+
+![The hosted read-only sandbox](docs/screenshots/07-hosted-sandbox.png)
+
+**So the live URL is not evidence for the gate, and is not offered as any.** A judge who ingested a transcript there, refreshed, and found it gone would reasonably conclude the memory layer is not load-bearing — the opposite of what is true. Persistence and cold-start recall are demonstrated locally, with [the commands above](#verify-it-yourself-in-60-seconds) and in the demo video. Everything the sandbox *displays* was read out of a real Sibyl database, seeded from the transcripts in `examples/`.
 
 ## The trust gate
 
@@ -234,7 +246,8 @@ Everything in the left column is exercised by the demo and covered by tests.
 | Trust downgrade + human resolution, with COLD audit | Deterministic regex classifier, no LLM extraction | CRM sync (Salesforce/HubSpot) |
 | Archive removes a client from the read path | English-only date parsing | Email/calendar ingestion |
 | Deadline parsing incl. explicit vague handling | Speaker attribution is `Name:` prefix only | Notifications when something comes due |
-| .xlsx export built live from memory | Deal stage is set manually, not inferred | Hosted deployment — runs locally |
+| .xlsx export built live from memory | Deal stage is set manually, not inferred | A *writable* hosted deployment |
+| | Hosted demo is read-only (no durable disk on serverless) | |
 | 70 tests against real Sibyl, not mocks | | |
 
 Known limits, stated plainly: the classifier is regex-based, so it will misroute unusual phrasing — the confidence floor sends the uncertain cases to a human rather than guessing, which is the intended failure mode. Conflicting pricing rules resolve last-write-wins, and the flag reason records the ceiling that was live at check time. Re-ingesting the same transcript is idempotent: promise IDs are SHA-1 of the text, so it updates rather than duplicates.

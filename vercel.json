@@ -1,10 +1,14 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "functions": {
-    "api/index.py": {
-      "includeFiles": "{troth/**,demo/**,troth-v2-lethe-blue.html}",
-      "maxDuration": 20
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": {
+        "includeFiles": "{troth/**,demo/**,troth-v2-lethe-blue.html}",
+        "maxLambdaSize": "50mb"
+      }
     }
-  },
-  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }]
+  ],
+  "routes": [{ "src": "/(.*)", "dest": "/api/index.py" }]
 }
