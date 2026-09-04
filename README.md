@@ -8,7 +8,7 @@
 ![tests](https://img.shields.io/badge/tests-70_passing-2FA46A)
 ![memory](https://img.shields.io/badge/Sibyl_Memory-5_tiers,_all_load--bearing-D7FFB2)
 ![python](https://img.shields.io/badge/Python-3.10+-5FD8E8)
-[![live](https://img.shields.io/badge/live-sybl--eosin.vercel.app-5FD8E8)](https://sybl-eosin.vercel.app)
+[![live](https://img.shields.io/badge/live-usetroth.vercel.app-5FD8E8)](https://usetroth.vercel.app)
 ![stack](https://img.shields.io/badge/Starlette_·_SQLite_FTS5_·_openpyxl-1f1f23)
 
 ### *A pledged word.*
@@ -17,7 +17,7 @@
 
 Reps lose deals because nobody remembers what was said three calls ago — a discount promised, a deadline agreed, a scope committed to. Troth reads your call transcripts, routes every line into the tier it belongs in, and checks each promise against standing policy **at the moment it is made**. A promise that breaks policy is downgraded to `flagged` and Troth will not repeat it as fact until a human decides. Archive a client and it refuses to brief you on them at all.
 
-**[ Live sandbox ↗ ](https://sybl-eosin.vercel.app)** · **[ The load-bearing moment ↗ ](#where-memory-is-load-bearing)** · **[ Verify it in 60 seconds ↗ ](#verify-it-yourself-in-60-seconds)** · **[ Run it ↗ ](#run-it)** · **[ Honesty table ↗ ](#whats-real-and-whats-not)**
+**[ Live sandbox ↗ ](https://usetroth.vercel.app)** · **[ The load-bearing moment ↗ ](#where-memory-is-load-bearing)** · **[ Verify it in 60 seconds ↗ ](#verify-it-yourself-in-60-seconds)** · **[ Run it ↗ ](#run-it)** · **[ Honesty table ↗ ](#whats-real-and-whats-not)**
 
 Built for the **[Sibyl Labs Hackathon](https://hack.sibyllabs.org)** · Sep 1–10, 2026.
 
@@ -138,7 +138,7 @@ Step 3 is the one that matters most: **the same input produces a different answe
 
 ## The hosted sandbox, and what it cannot prove
 
-**[sybl-eosin.vercel.app](https://sybl-eosin.vercel.app)** — click through the real dashboard, open a flagged promise, download the .xlsx.
+**[usetroth.vercel.app](https://usetroth.vercel.app)** — click through the real dashboard, open a flagged promise, download the .xlsx.
 
 It is **read-only**, and that is a property of the host, not of Troth. Sibyl Memory is a local SQLite file; serverless has no durable disk to put one on, so a write there would either fail on the read-only filesystem or succeed and vanish at the next cold start. Rather than let it half-work, the hosted build refuses writes with an explanation and says so in a banner:
 
