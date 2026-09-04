@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Troth">
+  <title>Troth</title>
+  <!-- Small-size variant of the mark. The hairlines that give the full
+       logo its poise disappear below ~48px, so everything here is
+       thickened and the canvas is filled more tightly. Same glyph, built
+       to survive a 16px browser tab. -->
+  <rect width="64" height="64" rx="14" fill="#0B1724"/>
+
+  <g fill="#F3F1EB">
+    <!-- beam, blunter and heavier than the full lockup -->
+    <path d="M3 25.5 L26 22 L26 29 Z"/>
+    <path d="M61 25.5 L38 22 L38 29 Z"/>
+
+    <!-- stem, a straight bar rather than a tapering plumb line -->
+    <rect x="29.6" y="9" width="4.8" height="47" rx="1.4"/>
+
+    <!-- pivot, oversized so the ring still reads at 16px -->
+    <circle cx="32" cy="25.5" r="9"/>
+  </g>
+  <circle cx="32" cy="25.5" r="3.6" fill="#0B1724"/>
+</svg>

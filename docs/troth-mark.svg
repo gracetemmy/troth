@@ -1,39 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Troth">
-  <defs>
-    <radialGradient id="warm" cx="36%" cy="30%">
-      <stop offset="0%" stop-color="#eaffd0"/>
-      <stop offset="55%" stop-color="#d7ffb2"/>
-      <stop offset="100%" stop-color="#8fbf72"/>
-    </radialGradient>
-    <radialGradient id="flag" cx="36%" cy="30%">
-      <stop offset="0%" stop-color="#ffc4a6"/>
-      <stop offset="60%" stop-color="#ff9c72"/>
-      <stop offset="100%" stop-color="#c86b45"/>
-    </radialGradient>
-    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="4" result="b"/>
-      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-  </defs>
-
+  <title>Troth</title>
   <rect width="200" height="200" rx="44" fill="#0B1724"/>
 
-  <!-- orbits -->
-  <circle cx="100" cy="100" r="70" fill="none" stroke="#f3f1eb" stroke-opacity=".10"/>
-  <circle cx="100" cy="100" r="46" fill="none" stroke="#f3f1eb" stroke-opacity=".07"/>
+  <g fill="#F3F1EB">
+    <!-- the beam: a balance arm, tapering to a point at each end -->
+    <path d="M14 78 L86 71.5 L86 84.5 Z"/>
+    <path d="M186 78 L114 71.5 L114 84.5 Z"/>
 
-  <!-- the confirmed core -->
-  <circle cx="100" cy="100" r="26" fill="url(#warm)" filter="url(#glow)"/>
+    <!-- the plumb line: the stem of the T, falling to a point -->
+    <path d="M96.4 48 L103.6 48 L101.4 178 L98.6 178 Z"/>
 
-  <!-- satellites: four settled, one flagged -->
-  <circle cx="100" cy="30"  r="7"   fill="#b7f0ff" fill-opacity=".85"/>
-  <circle cx="156" cy="128" r="5.5" fill="#9ca9ff" fill-opacity=".7"/>
-  <circle cx="44"  cy="128" r="5.5" fill="#8b8b87" fill-opacity=".6"/>
-  <circle cx="100" cy="170" r="5"   fill="#b7f0ff" fill-opacity=".45"/>
-  <circle cx="163" cy="61"  r="10"  fill="url(#flag)" filter="url(#glow)"/>
-
-  <!-- the unresolved link, drawn broken -->
-  <path d="M118 86 L152 68" stroke="#ff9c72" stroke-opacity=".55"
-        stroke-width="1.6" stroke-dasharray="3 4" stroke-linecap="round"/>
-  <path d="M100 74 L100 40" stroke="#f3f1eb" stroke-opacity=".18" stroke-width="1.2"/>
+    <!-- the pivot -->
+    <circle cx="100" cy="78" r="13.5"/>
+  </g>
+  <circle cx="100" cy="78" r="6.5" fill="#0B1724"/>
 </svg>

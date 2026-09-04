@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/troth-mark.svg" alt="Troth" width="132" />
+<img src="docs/troth-mark.svg" alt="Troth" width="120" />
 
 # Troth
 
