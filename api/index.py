@@ -26,6 +26,21 @@ from __future__ import annotations
 import os
 import pathlib
 import shutil
+import sys
+
+# Must run before anything imports sibyl_memory_client, which grabs
+# sqlite3 at import time. Vercel's runtime SQLite is missing the FTS5
+# tokenizer Sibyl's search index builds on: reads worked, every write
+# died with "error in tokenizer constructor". pysqlite3 carries its own
+# modern SQLite, so aliasing it over the stdlib module fixes writes
+# without touching a line of Troth or Sibyl.
+try:
+    import pysqlite3  # type: ignore
+
+    sys.modules["sqlite3"] = pysqlite3
+    sys.modules["sqlite3.dbapi2"] = pysqlite3.dbapi2
+except ImportError:
+    pass
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SEED = ROOT / "demo" / "demo-seed.db"
@@ -42,7 +57,12 @@ def _prepare_database() -> str:
     """
     if SEED.exists() and not LIVE.exists():
         try:
-            shutil.copy2(SEED, LIVE)
+            # copyfile, not copy2: copy2 preserves the source's mode, and
+            # files baked into a deployment bundle arrive read-only. That
+            # produced a read-only copy in /tmp and every write failed with
+            # a bare "SQLite error: OperationalError".
+            shutil.copyfile(SEED, LIVE)
+            LIVE.chmod(0o600)
         except OSError:
             pass
     return str(LIVE)

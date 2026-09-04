@@ -53,21 +53,55 @@ CATEGORY_TIER = {"client": "WARM", "promise": "WARM"}
 
 SANDBOX = bool(os.environ.get("TROTH_SANDBOX"))
 
-# What the hosted build says instead of half-writing. Serverless gives us
-# one ephemeral /tmp per instance, so a write here would either fail on
-# the read-only filesystem or succeed and vanish on the next cold start.
-# Both are worse than saying so.
+# The hosted build is a scratch copy. Writes land on this instance's own
+# /tmp, so they work fully — routing, the policy check, the flag, the
+# resolution — but they are private to this instance and go when it
+# recycles. That is worth having: a judge can actually try the gate. It
+# is only dangerous if we let them believe it is the durable article, so
+# the banner says exactly what it is.
 SANDBOX_NOTE = (
-    "This is the hosted read-only sandbox. Sibyl Memory is a local SQLite "
-    "file, and serverless has no durable disk to put it on — a write here "
-    "would not survive the next cold start. Clone the repo and run "
-    "`troth serve` to write to a real memory that persists."
+    "Scratch sandbox — go ahead and change things. Ingest a transcript, "
+    "resolve a flag, export the sheet. Your changes are real but private "
+    "to this instance and reset when it recycles, because serverless has "
+    "no durable disk. Run it locally for a memory that persists."
 )
 
 
-def _sandbox_refusal() -> JSONResponse:
-    return JSONResponse({"error": "read_only_sandbox", "detail": SANDBOX_NOTE},
-                        status_code=503)
+def _memory(request: Request):
+    """Connect on first use, not at import.
+
+    Sibyl opens SQLite in WAL mode, which needs its -wal and -shm
+    sidecars. On serverless the module is imported during init, when the
+    instance's /tmp is not yet the one the request will see, so a
+    connection made at import time is poisoned by the time a request
+    arrives — every write came back as a bare OperationalError. Connecting
+    lazily and caching per instance fixes it, and costs nothing locally.
+    """
+    mem = getattr(request.app.state, "memory", None)
+    if mem is None:
+        mem = M.connect(request.app.state.db_path)
+        if SANDBOX:
+            _drop_wal(mem)
+        request.app.state.memory = mem
+    return mem
+
+
+def _drop_wal(mem) -> None:
+    """Serverless only: take the database out of WAL mode.
+
+    Sibyl sets `PRAGMA journal_mode = WAL` on every connect. WAL needs a
+    -shm shared-memory file and the POSIX locking that goes with it, and
+    the serverless /tmp does not support it — reads work, but the
+    BEGIN IMMEDIATE behind every write fails with a bare OperationalError.
+    A rollback journal needs no shared memory, so switching to DELETE on
+    the cached connection makes writes work in the sandbox. Untouched
+    everywhere else: locally WAL is the better mode and works fine.
+    """
+    try:
+        with mem.storage.connection() as conn:
+            conn.execute("PRAGMA journal_mode = DELETE")
+    except Exception:  # noqa: BLE001 - best effort; reads still work
+        pass
 
 
 def _fail(exc: Exception, status: int = 500) -> JSONResponse:
@@ -97,7 +131,7 @@ def _node(record: dict) -> dict:
 
 async def overview(request: Request) -> JSONResponse:
     """Everything the dashboard header and panels need, in one call."""
-    m = request.app.state.memory
+    m = _memory(request)
     try:
         clients = list(m.list_entities("client"))          # SIBYL WARM
         promises = list(m.list_entities("promise"))        # SIBYL WARM
@@ -151,9 +185,7 @@ async def overview(request: Request) -> JSONResponse:
 
 
 async def ingest(request: Request) -> JSONResponse:
-    if SANDBOX:
-        return _sandbox_refusal()
-    m = request.app.state.memory
+    m = _memory(request)
     try:
         payload = await request.json()
     except json.JSONDecodeError as exc:
@@ -181,9 +213,7 @@ async def ingest(request: Request) -> JSONResponse:
 
 
 async def resolve(request: Request) -> JSONResponse:
-    if SANDBOX:
-        return _sandbox_refusal()
-    m = request.app.state.memory
+    m = _memory(request)
     try:
         payload = await request.json()
         out = M.resolve_flag(
@@ -200,7 +230,7 @@ async def resolve(request: Request) -> JSONResponse:
 
 
 async def search(request: Request) -> JSONResponse:
-    m = request.app.state.memory
+    m = _memory(request)
     query = request.query_params.get("q", "").strip()
     if not query:
         return JSONResponse({"results": []})
@@ -222,7 +252,7 @@ async def view(request: Request) -> JSONResponse:
     """Backs every sidebar item. Each one is a different question asked of
     the same five tiers, so they all read live rather than filtering a
     payload the browser already holds."""
-    m = request.app.state.memory
+    m = _memory(request)
     name = request.path_params["name"]
 
     try:
@@ -340,7 +370,7 @@ def _qdate(request: Request, key: str):
 
 async def export_xlsx(request: Request) -> Any:
     """Build the workbook on the spot from whatever is in memory now."""
-    m = request.app.state.memory
+    m = _memory(request)
     scope = request.query_params.get("scope", "commitments")
     try:
         wb = X.build_workbook(m, scope, _qdate(request, "from"), _qdate(request, "to"))
@@ -376,7 +406,8 @@ def build_app(db_path: str | None = None) -> Starlette:
         Route("/api/view/{name}", view),
         Route("/api/export.xlsx", export_xlsx),
     ])
-    app.state.memory = M.connect(db_path)
+    app.state.db_path = db_path
+    app.state.memory = None       # opened on the first request, see _memory()
     return app
 
 

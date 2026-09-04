@@ -1,3 +1,8 @@
 sibyl-memory-client>=0.8.0
 starlette>=0.37
 openpyxl>=3.1
+# Linux-only wheel, for the serverless build only. The SQLite compiled
+# into Vercel's Python runtime lacks the FTS5 tokenizer Sibyl's search
+# index needs — every write failed with "error in tokenizer constructor"
+# while reads worked. pysqlite3 ships a current SQLite with FTS5.
+pysqlite3-binary>=0.5; sys_platform == "linux"

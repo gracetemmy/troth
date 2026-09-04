@@ -10,7 +10,7 @@ from troth import server
 @pytest.fixture
 def client(tmp_path):
     app = server.build_app(str(tmp_path / "api.db"))
-    M.remember_pricing_rule(app.state.memory, M.MAX_DISCOUNT_KEY, 15)
+    M.remember_pricing_rule(M.connect(app.state.db_path), M.MAX_DISCOUNT_KEY, 15)
     return TestClient(app)
 
 

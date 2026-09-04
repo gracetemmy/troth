@@ -142,11 +142,11 @@ Step 3 is the one that matters most: **the same input produces a different answe
 
 **[usetroth.vercel.app](https://usetroth.vercel.app)** — click through the real dashboard, open a flagged promise, download the .xlsx.
 
-It is **read-only**, and that is a property of the host, not of Troth. Sibyl Memory is a local SQLite file; serverless has no durable disk to put one on, so a write there would either fail on the read-only filesystem or succeed and vanish at the next cold start. Rather than let it half-work, the hosted build refuses writes with an explanation and says so in a banner:
+It is a **scratch sandbox**: ingest a transcript, watch it route, flag a promise, resolve it, download the sheet. Writes are real. They are also private to that server instance and reset when it recycles, because serverless has no durable disk to keep a SQLite file on — so the banner says exactly that rather than letting the deployment imply permanence:
 
 ![The hosted read-only sandbox](docs/screenshots/07-hosted-sandbox.png)
 
-**So the live URL is not evidence for the gate, and is not offered as any.** A judge who ingested a transcript there, refreshed, and found it gone would reasonably conclude the memory layer is not load-bearing — the opposite of what is true. Persistence and cold-start recall are demonstrated locally, with [the commands above](#verify-it-yourself-in-60-seconds) and in the demo video. Everything the sandbox *displays* was read out of a real Sibyl database, seeded from the transcripts in `examples/`.
+**The live URL lets a judge exercise the gate, but it is not evidence of persistence, and is not offered as any.** A judge who ingested a transcript there, refreshed, and found it gone would reasonably conclude the memory layer is not load-bearing — the opposite of what is true. Persistence and cold-start recall are demonstrated locally, with [the commands above](#verify-it-yourself-in-60-seconds) and in the demo video. Everything the sandbox *displays* was read out of a real Sibyl database, seeded from the transcripts in `examples/`.
 
 ## The trust gate
 
@@ -248,8 +248,8 @@ Everything in the left column is exercised by the demo and covered by tests.
 | Trust downgrade + human resolution, with COLD audit | Deterministic regex classifier, no LLM extraction | CRM sync (Salesforce/HubSpot) |
 | Archive removes a client from the read path | English-only date parsing | Email/calendar ingestion |
 | Deadline parsing incl. explicit vague handling | Speaker attribution is `Name:` prefix only | Notifications when something comes due |
-| .xlsx export built live from memory | Deal stage is set manually, not inferred | A *writable* hosted deployment |
-| | Hosted demo is read-only (no durable disk on serverless) | |
+| .xlsx export built live from memory | Deal stage is set manually, not inferred | A *durable* hosted deployment |
+| | Hosted writes reset when the instance recycles | |
 | 70 tests against real Sibyl, not mocks | | |
 
 Known limits, stated plainly: the classifier is regex-based, so it will misroute unusual phrasing — the confidence floor sends the uncertain cases to a human rather than guessing, which is the intended failure mode. Conflicting pricing rules resolve last-write-wins, and the flag reason records the ceiling that was live at check time. Re-ingesting the same transcript is idempotent: promise IDs are SHA-1 of the text, so it updates rather than duplicates.

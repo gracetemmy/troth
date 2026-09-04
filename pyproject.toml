@@ -17,6 +17,11 @@ dependencies = [
     "starlette>=0.37",
     "uvicorn>=0.27",
     "openpyxl>=3.1",
+    # Serverless only. The SQLite compiled into Vercel's Python runtime
+    # lacks the FTS5 tokenizer Sibyl's search index needs, so every write
+    # failed with "error in tokenizer constructor" while reads worked.
+    # Linux-marked, so local installs on macOS/Windows skip it entirely.
+    "pysqlite3-binary>=0.5; sys_platform == 'linux'",
 ]
 
 [project.optional-dependencies]
