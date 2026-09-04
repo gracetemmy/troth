@@ -9,6 +9,7 @@ beat.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 
 from . import commitments as C
@@ -203,8 +204,10 @@ def main(argv: list[str] | None = None) -> int:
     s.set_defaults(func=cmd_export)
 
     s = sub.add_parser("serve", help="run the dashboard")
-    s.add_argument("--host", default="127.0.0.1")
-    s.add_argument("--port", type=int, default=8000)
+    # Hosts that give you a real machine hand you the port and expect you
+    # to bind every interface. Locally the defaults stay loopback.
+    s.add_argument("--host", default=os.environ.get("HOST", "127.0.0.1"))
+    s.add_argument("--port", type=int, default=int(os.environ.get("PORT", 8000)))
     s.set_defaults(func=cmd_serve)
 
     args = p.parse_args(argv)

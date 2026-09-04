@@ -1,0 +1,17 @@
+# Render blueprint. Note the plan: persistent disks require a paid
+# instance type — Render's free web services cannot mount one, which is
+# the whole reason this file exists.
+services:
+  - type: web
+    name: troth
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/overview
+    disk:
+      name: troth-memory
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: TROTH_DB
+        value: /data/memory.db
