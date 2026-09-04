@@ -71,6 +71,8 @@ Deep links work throughout: `#dashboard/commitments` opens a view, and `#promise
 
 Troth is a sales copilot with a memory it is accountable to. You paste or upload a call transcript; a deterministic router classifies every line and writes it into the Sibyl tier where it belongs — client facts to WARM, the timeline to COLD, pricing policy to REFERENCE, deal state to HOT. When it hits a promise, it reads the standing discount ceiling out of REFERENCE and checks the promise against it right then. Under the ceiling, the promise is stored `confirmed`. Over it, the promise is stored `flagged`, and from that moment Troth will not repeat it as an agreed fact — not in the pre-call brief, not in search, not anywhere — until a human approves or retracts it. Promises about *time* ("I'll send the quote by Friday") get a parsed due date instead, and the brief tells you how overdue you are. Archive a client and they leave the read path entirely, so the agent cannot suggest re-pitching someone who already churned.
 
+Nothing in Troth assumes a *customer*. It assumes a **rule** and a **commitment** — so the same gate guards a sales discount, a procurement limit, an SLA term or an internal hiring offer. Change what is in REFERENCE and it guards a different kind of promise.
+
 ## Where memory is load-bearing
 
 **Every read and write Troth performs is in one file: [`troth/memory.py`](troth/memory.py).** Nothing else in the codebase touches storage. Each call is tagged with a `# SIBYL <TIER>` comment, so `grep -n "SIBYL " troth/memory.py` prints the complete critical path in one command.
