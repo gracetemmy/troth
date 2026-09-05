@@ -70,22 +70,7 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
 .tier.lit .dot.arch{box-shadow:0 0 16px #777}
 .ownstatus.lit{box-shadow:0 0 0 1px rgba(255,156,114,.5),0 0 44px rgba(255,156,114,.12)}
 
-/* the hero promise-checker */
-.try{margin-top:26px;padding:19px 20px;border-radius:16px;background:#0E1B29;box-shadow:0 0 0 1px var(--hair);max-width:520px}
-.try-label{font:9px "DM Mono";letter-spacing:.15em;color:#5a6b7a;margin-bottom:12px}
-.try-rule{display:flex;align-items:center;gap:9px;font:10px "DM Mono";color:#7f807a;margin-bottom:13px}
-.try-rule input{width:58px;background:#0B1724;border:1px solid var(--hair);border-radius:7px;padding:6px 8px;color:var(--ref);font:11px "DM Mono";text-align:center;outline:0}
-.try-rule input:focus{border-color:var(--ref)}
-.try-line{display:flex;gap:8px;flex-wrap:wrap}
-.try-line button{padding:8px 12px;border-radius:9px;border:0;background:#152737;color:#9fa39c;font-size:11px;cursor:pointer;transition:background .18s var(--ease-out),color .18s var(--ease-out)}
-.try-line button:hover{background:#1d3247;color:#e8e7e1}
-.try-line button.on{background:#22384e;color:#fff}
-.try-out{margin-top:14px;padding:13px 15px;border-radius:11px;background:#0B1724;font:11px "DM Mono";line-height:1.7;min-height:66px;transition:box-shadow .3s var(--ease-out)}
-.try-out.ok{box-shadow:0 0 0 1px rgba(215,255,178,.35)}
-.try-out.flag{box-shadow:0 0 0 1px rgba(255,156,114,.45)}
-.try-verdict{font-size:13px;letter-spacing:.04em;font-weight:600}
-.try-out.ok .try-verdict{color:var(--warm)}
-.try-out.flag .try-verdict{color:var(--flag)}
+.hero-try{margin-top:16px;color:#6f7b86;font-size:10px;letter-spacing:.09em;line-height:1.7;max-width:430px}
 .try-why{color:#7f807a;margin-top:5px;display:block}
 /* Reduced motion: drop the motion that moves *you* — things that slide
    in, flash, or jump the page. The ambient orbits are slow, continuous
@@ -257,18 +242,8 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
           <div class="kicker mono">A pledged word · a promise you can be held to.</div>
           <h1>Remember.<br><em>Verify.</em><br>Commit.</h1>
           <p class="hero-desc">Troth is the sales/client copilot that remembers what was actually promised — and refuses to repeat a promise it hasn't verified.</p>
-          <div class="hero-actions"><button class="cta" onclick="document.querySelector('#trust').scrollIntoView({behavior:'smooth'})">See the trust gate</button><button class="pill" onclick="openDashboard()">Enter live memory →</button></div>
-
-          <div class="try">
-            <div class="try-label">TRY THE GATE — CHANGE THE RULE, WATCH THE ANSWER CHANGE</div>
-            <div class="try-rule">
-              <span>REFERENCE · max discount</span>
-              <input id="try-ceiling" type="number" min="0" max="99" value="15" aria-label="Maximum discount percent">
-              <span>%</span>
-            </div>
-            <div class="try-line" id="try-lines"></div>
-            <div class="try-out" id="try-out"></div>
-          </div>
+          <div class="hero-actions"><button class="cta" onclick="openDashboard()">Open live memory →</button><button class="pill" onclick="document.querySelector('#trust').scrollIntoView({behavior:'smooth'})">How the gate works</button></div>
+          <p class="hero-try mono">Try it yourself — paste a transcript, break the policy, watch the promise get flagged.</p>
         </div>
         <div class="hero-art">
           <div class="art-grid"></div><div class="orbit"></div><div class="orbit orbit2"></div>
@@ -898,62 +873,6 @@ const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       else if (!e.isIntersecting) stop();
     });
   }, {threshold: .3}).observe(section);
-})();
-
-/* the hero promise checker */
-(() => {
-  const LINES = [
-    {t: "I can do 10% off the renewal.", pct: 10},
-    {t: "I can offer you 25% this quarter.", pct: 25},
-    {t: "We'll waive the setup fee.", pct: null},
-    {t: "I might be able to discount it, not sure.", pct: null, hedged: true},
-  ];
-  const host = document.getElementById('try-lines');
-  const out  = document.getElementById('try-out');
-  const ceil = document.getElementById('try-ceiling');
-  if (!host || !out || !ceil) return;
-
-  let picked = 1;
-  host.innerHTML = LINES.map((l, i) =>
-    `<button data-i="${i}"${i === picked ? ' class="on"' : ''}>${esc(l.t)}</button>`).join('');
-
-  function verdict(){
-    const line = LINES[picked];
-    const ceiling = parseFloat(ceil.value);
-    let ok, why;
-
-    if (Number.isNaN(ceiling)) {
-      ok = false;
-      why = 'no ceiling in REFERENCE — Troth will not guess one';
-    } else if (line.hedged) {
-      ok = false;
-      why = 'hedged language — unclear whether this was a commitment';
-    } else if (line.pct === null) {
-      ok = false;
-      why = 'no discount figure found; cannot be checked against policy';
-    } else if (line.pct > ceiling) {
-      ok = false;
-      why = `${line.pct}% exceeds the standing ${ceiling}% discount ceiling`;
-    } else {
-      ok = true;
-      why = `${line.pct}% is within the standing ${ceiling}% ceiling`;
-    }
-
-    out.className = 'try-out ' + (ok ? 'ok' : 'flag');
-    out.innerHTML =
-      `<span class="try-verdict">${ok ? 'CONFIRMED' : 'FLAGGED'}</span>` +
-      `<span class="try-why">${esc(why)}</span>` +
-      (ok ? '' : '<span class="try-why">Troth will not repeat this as fact until a human resolves it.</span>');
-  }
-
-  host.addEventListener('click', e => {
-    const b = e.target.closest('button'); if (!b) return;
-    picked = +b.dataset.i;
-    host.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
-    verdict();
-  });
-  ceil.addEventListener('input', verdict);
-  verdict();
 })();
 
 /* ---- deep links ----
