@@ -5,7 +5,7 @@
 # Troth
 
 [![MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
-![tests](https://img.shields.io/badge/tests-70_passing-2FA46A)
+![tests](https://img.shields.io/badge/tests-75_passing-2FA46A)
 ![memory](https://img.shields.io/badge/Sibyl_Memory-5_tiers,_all_load--bearing-D7FFB2)
 ![python](https://img.shields.io/badge/Python-3.10+-5FD8E8)
 [![live](https://img.shields.io/badge/live-usetroth.vercel.app-5FD8E8)](https://usetroth.vercel.app)
@@ -250,7 +250,7 @@ Everything in the left column is exercised by the demo and covered by tests.
 | Deadline parsing incl. explicit vague handling | Speaker attribution is `Name:` prefix only | Notifications when something comes due |
 | .xlsx export built live from memory | Deal stage is set manually, not inferred | A *durable* hosted deployment |
 | | Hosted writes reset when the instance recycles | |
-| 70 tests against real Sibyl, not mocks | | |
+| 75 tests against real Sibyl, not mocks | | |
 
 Known limits, stated plainly: the classifier is regex-based, so it will misroute unusual phrasing — the confidence floor sends the uncertain cases to a human rather than guessing, which is the intended failure mode. Conflicting pricing rules resolve last-write-wins, and the flag reason records the ceiling that was live at check time. Re-ingesting the same transcript is idempotent: promise IDs are SHA-1 of the text, so it updates rather than duplicates.
 
@@ -290,7 +290,7 @@ troth --db ./scratch.db brief meridian
 
 ```bash
 pip install -e ".[dev]"
-pytest -q          # 70 passed
+pytest -q          # 75 passed
 ```
 
 Every test runs against a **real Sibyl database** in a temp directory — nothing is mocked, so a breaking change in `sibyl-memory-client` fails the suite instead of surfacing in the demo.
@@ -302,6 +302,7 @@ Every test runs against a **real Sibyl database** in a temp directory — nothin
 | [`test_commitments.py`](tests/test_commitments.py) | Date extraction, vague handling, urgency |
 | [`test_export.py`](tests/test_export.py) | Workbook scopes, date filters, undated survival |
 | [`test_api.py`](tests/test_api.py) | Every endpoint, including bad input |
+| [`test_ui_affordance.py`](tests/test_ui_affordance.py) | Nothing may look clickable without being clickable |
 
 ## Project layout
 
@@ -313,7 +314,7 @@ troth/
 ├── export.py        ← .xlsx workbook building
 ├── server.py        ← Starlette API, serves the dashboard same-origin
 └── cli.py           ← seed · ingest · brief · due · flags · resolve · archive · export · serve
-tests/               ← 70 tests against a real Sibyl database
+tests/               ← 75 tests against a real Sibyl database
 examples/            ← 5 sample transcripts + 2 deliberate edge cases
 docs/screenshots/    ← captured from the running app, not mocked up
 troth-v2-lethe-blue.html   ← the dashboard

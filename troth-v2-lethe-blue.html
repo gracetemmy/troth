@@ -209,7 +209,13 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
 .routed-row .txt{font-size:11px;color:#c9c8c2;line-height:1.5}
 .state{padding:34px 18px;text-align:center;color:#6d6e68;font-size:11px;line-height:1.7}
 .state.err{color:var(--flag)}
-.map-node.dyn{cursor:pointer}
+/* Affordance follows action: .acts is added by the same code that
+   attaches the handler, so a node cannot look clickable without
+   being clickable. */
+.map-node.acts{cursor:pointer}
+.linkish{background:none;border:0;padding:0;cursor:pointer;transition:color .18s var(--ease-out)}
+.linkish:hover{color:#e8e7e1}
+.map-node.acts:focus-visible{outline:2px solid var(--warm);outline-offset:3px}
 .map-node small{display:block;margin-top:4px;opacity:.72;font-size:8px}
 .busy{opacity:.5;pointer-events:none}
 .list-note{padding:14px 18px 4px;color:#6d6e68;font-size:10px;line-height:1.6;border-bottom:1px solid var(--hair)}
@@ -393,7 +399,7 @@ button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none
           </div>
         </section>
         <section class="dashpanel">
-          <div class="panel-title"><b>Recent trust events</b><span class="filter">VIEW ALL →</span></div>
+          <div class="panel-title"><b>Recent trust events</b><button class="filter linkish" onclick="showView('audit', [...document.querySelectorAll('.sideitem')].find(i => i.dataset.view === 'audit'))">VIEW ALL →</button></div>
           <div class="activity" id="activity"></div>
           </section>
       </div>
@@ -574,13 +580,24 @@ function renderMap(d){
     // one that looks clickable and isn't is worse than one that plainly
     // is not.
     const slot = slots[+el.dataset.i];
-    if (slot.rec) {
-      el.onclick = () => showRecord(slot.rec);
-    } else if (slot.view) {
-      el.onclick = () => showView(slot.view,
-        [...document.querySelectorAll('.sideitem')]
-          .find(i => i.dataset.view === slot.view));
-    }
+    const act = slot.rec
+      ? () => showRecord(slot.rec)
+      : slot.view
+        ? () => showView(slot.view, [...document.querySelectorAll('.sideitem')]
+            .find(i => i.dataset.view === slot.view))
+        : null;
+
+    // One place decides both. If there is no action there is no pointer,
+    // no tabstop and no keyboard handler — the node simply is not
+    // interactive, and it does not pretend to be.
+    if (!act) return;
+    el.onclick = act;
+    el.classList.add('acts');
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); }
+    });
   });
 
   if (!slots.length) host.innerHTML =
