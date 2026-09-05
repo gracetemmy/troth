@@ -550,17 +550,17 @@ function renderMap(d){
 
   const slots = [
     clients[0] && {cls:'mn-a', tier:'WARM', top:'CLIENT',
-                   label:clients[0].id, sub:'WARM · confirmed', rec:clients[0]},
+                   label:clients[0].id, sub:'open record', rec:clients[0]},
     d.promises > 0 && {cls:'mn-b', tier:'HOT', top:'HOT', label:'ACTIVE',
-                       sub:d.promises + ' promises'},
+                       sub:d.promises + ' promises', view:'deals'},
     d.max_discount_pct != null && {cls:'mn-c', tier:'REFERENCE', top:'REFERENCE',
-                   label:d.max_discount_pct + '% MAX', sub:'policy'},
+                   label:d.max_discount_pct + '% MAX', sub:'policies', view:'policies'},
     flagged[0] && {cls:'mn-d', tier:'FLAGGED', top:'WARM · flagged',
                    label:(flagged[0].body.discount_pct != null
                           ? flagged[0].body.discount_pct + '% CLAIM' : 'UNVERIFIED'),
                    sub:'tap to review', rec:flagged[0]},
     latest && {cls:'mn-e', tier:'COLD', top:'COLD',
-               label:(latest.ts || '').slice(11,16), sub:'last event'},
+               label:(latest.ts || '').slice(11,16), sub:'audit trail', view:'audit'},
   ].filter(Boolean);
 
   host.innerHTML = slots.map((s, i) =>
@@ -569,8 +569,18 @@ function renderMap(d){
   ).join('');
 
   host.querySelectorAll('.map-node').forEach(el => {
-    const rec = slots[+el.dataset.i].rec;
-    if (rec) el.onclick = () => showRecord(rec);
+    // Nodes standing for one record open that record; nodes standing
+    // for a whole tier open the view that lists it. Every node acts —
+    // one that looks clickable and isn't is worse than one that plainly
+    // is not.
+    const slot = slots[+el.dataset.i];
+    if (slot.rec) {
+      el.onclick = () => showRecord(slot.rec);
+    } else if (slot.view) {
+      el.onclick = () => showView(slot.view,
+        [...document.querySelectorAll('.sideitem')]
+          .find(i => i.dataset.view === slot.view));
+    }
   });
 
   if (!slots.length) host.innerHTML =
@@ -609,21 +619,39 @@ function showRecord(rec){
   CURRENT = rec;
   const b = rec.body || {};
   const drawer = document.getElementById('drawer');
-  drawer.querySelector('.mono.muted').textContent =
-    'PROMISE · ' + String(rec.status || '').toUpperCase();
-  drawer.querySelector('h2').textContent =
-    b.discount_pct != null ? b.discount_pct + '% discount' : 'Unverified promise';
-  drawer.querySelector('.drawer-quote').textContent = '“' + (b.text || rec.name) + '”';
+  // A client and a promise are different animals. Rendering a client
+  // through the promise template gave it a "MADE BY unknown" and an
+  // "Unverified promise" heading, which is simply untrue.
+  const isClient = rec.category === 'client';
+  const facts = b.facts || [];
 
-  const rows = [
-    ['MADE BY',   b.made_by || 'unknown'],
-    ['REASON',    b.reason  || '—'],
-    ['REFERENCE', b.checked_against != null
-                    ? 'Maximum discount · ' + b.checked_against + '%'
-                    : 'no figure to check'],
-    ['STATUS',    rec.status === 'flagged'
-                    ? 'Human resolution required' : rec.status],
-  ];
+  drawer.querySelector('.mono.muted').textContent =
+    (isClient ? 'CLIENT · ' : 'PROMISE · ') + String(rec.status || '').toUpperCase();
+
+  drawer.querySelector('h2').textContent = isClient
+    ? rec.id
+    : (b.discount_pct != null ? b.discount_pct + '% discount' : 'Unverified promise');
+
+  drawer.querySelector('.drawer-quote').textContent = isClient
+    ? (facts[0] || 'No facts recorded for this client yet.')
+    : '“' + (b.text || rec.name) + '”';
+
+  const rows = isClient
+    ? [
+        ['CATEGORY', 'WARM entity'],
+        ['FACTS',    facts.length ? facts.length + ' recorded' : 'none yet'],
+        ['STATUS',   rec.status || 'confirmed'],
+        ['UPDATED',  (rec.updated || '').slice(0, 10) || '—'],
+      ]
+    : [
+        ['MADE BY',   b.made_by || 'unknown'],
+        ['REASON',    b.reason  || '—'],
+        ['REFERENCE', b.checked_against != null
+                        ? 'Maximum discount · ' + b.checked_against + '%'
+                        : 'no figure to check'],
+        ['STATUS',    rec.status === 'flagged'
+                        ? 'Human resolution required' : rec.status],
+      ];
   drawer.querySelectorAll('.drawer-row').forEach((el, i) => {
     if (!rows[i]) { el.style.display = 'none'; return; }
     el.style.display = '';
