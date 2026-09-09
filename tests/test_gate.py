@@ -46,3 +46,22 @@ def test_archived_client_leaves_the_read_path(seeded):
 def test_archiving_an_unknown_client_is_an_error(seeded):
     with pytest.raises(KeyError):
         M.archive_client(seeded, "nobody", "never existed")
+
+
+def test_brief_does_not_guess_why_a_client_is_absent(seeded, capsys):
+    """A client Troth has never seen is not the same as one that was
+    archived. Saying the second when it means the first is an unverified
+    claim — the exact thing this product refuses to make."""
+    from troth import cli
+
+    M.remember_client(seeded, "nimbus", {"facts": ["signed in March"]})
+    M.remember_client(seeded, "northstar", {"facts": ["churned"]})
+    M.archive_client(seeded, "northstar", "moved to a competitor")
+
+    args = type("A", (), {"client": "ghostco", "db": None})()
+    cli.cmd_brief(args, seeded)
+    assert "archived" not in capsys.readouterr().out.lower()
+
+    args.client = "northstar"
+    cli.cmd_brief(args, seeded)
+    assert "archived" in capsys.readouterr().out.lower()

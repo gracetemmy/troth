@@ -55,11 +55,24 @@ def cmd_brief(args, m) -> int:
     """The pre-call brief. This is the cold-start recall beat."""
     client = M.get_client(m, args.client)
     if client is None:
-        if M.timeline(m):
-            _out(f"'{args.client}' is not in active memory. It may have been "
-                 f"archived — Troth will not suggest re-pitching it.")
-            return 1
-        _out("Memory is empty. Troth has nothing to brief you from.")
+        # Absent for two very different reasons, and Troth should not
+        # guess which. The COLD journal records every archive, so it can
+        # tell "retired on purpose" from "never seen" — and saying the
+        # first when it means the second is exactly the unverified claim
+        # this whole product exists to avoid.
+        archived = any(
+            (e.get("extra") or {}).get("kind") == "client_archived"
+            and (e.get("extra") or {}).get("deal") == args.client
+            for e in M.timeline(m, limit=500)
+        )
+        if archived:
+            _out(f"'{args.client}' was archived. Troth will not suggest "
+                 f"re-pitching them.")
+        elif M.timeline(m):
+            _out(f"Nothing in memory about '{args.client}'. Ingest a "
+                 f"transcript first.")
+        else:
+            _out("Memory is empty. Troth has nothing to brief you from.")
         return 1
 
     _out(f"CLIENT   {args.client}")
