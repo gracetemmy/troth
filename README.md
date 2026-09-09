@@ -5,7 +5,7 @@
 # Troth
 
 [![MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
-![tests](https://img.shields.io/badge/tests-75_passing-2FA46A)
+![tests](https://img.shields.io/badge/tests-76_passing-2FA46A)
 ![memory](https://img.shields.io/badge/Sibyl_Memory-5_tiers,_all_load--bearing-D7FFB2)
 ![python](https://img.shields.io/badge/Python-3.10+-5FD8E8)
 [![live](https://img.shields.io/badge/live-usetroth.vercel.app-5FD8E8)](https://usetroth.vercel.app)
@@ -52,6 +52,7 @@ Deep links work throughout: `#dashboard/commitments` opens a view, and `#promise
 - [Where memory is load-bearing](#where-memory-is-load-bearing)
 - [Verify it yourself in 60 seconds](#verify-it-yourself-in-60-seconds)
 - [The hosted sandbox, and what it cannot prove](#the-hosted-sandbox-and-what-it-cannot-prove)
+  - [Why the cold-start test can't be run against the hosted demo](#why-the-cold-start-test-cant-be-run-against-the-hosted-demo)
 - [The trust gate](#the-trust-gate)
 - [Commitments — promises about time](#commitments--promises-about-time)
 - [Architecture](#architecture)
@@ -146,7 +147,22 @@ It is a **scratch sandbox**: ingest a transcript, watch it route, flag a promise
 
 ![The hosted read-only sandbox](docs/screenshots/07-hosted-sandbox.png)
 
-**The live URL lets a judge exercise the gate, but it is not evidence of persistence, and is not offered as any.** A judge who ingested a transcript there, refreshed, and found it gone would reasonably conclude the memory layer is not load-bearing — the opposite of what is true. Persistence and cold-start recall are demonstrated locally, with [the commands above](#verify-it-yourself-in-60-seconds) and in the demo video. Everything the sandbox *displays* was read out of a real Sibyl database, seeded from the transcripts in `examples/`.
+**The live URL lets a judge exercise the gate, but it is not evidence of persistence, and is not offered as any.** A judge who ingested a transcript there, refreshed, and found it gone would reasonably conclude the memory layer is not load-bearing — the opposite of what is true. Everything the sandbox *displays* was read out of a real Sibyl database, seeded from the transcripts in `examples/`.
+
+### Why the cold-start test can't be run against the hosted demo
+
+The obvious thing to try is: ingest a transcript at usetroth.vercel.app, then run `troth brief` in a terminal and watch it come back. That cannot work, and the reason is worth stating plainly because it is a property of Sibyl's design rather than a gap in this build.
+
+Sibyl Memory is a **local file**. Its only constructor is `MemoryClient.local(path)` — there is no remote mode, no connection string, no server to point at on the free tier. So:
+
+```
+usetroth.vercel.app   →  a memory file on Vercel's machine
+your terminal         →  a memory file on your machine
+```
+
+`troth brief` opens a path on whatever machine it is running on. It has no network in it at all. Asking a terminal on your laptop to read the hosted memory is asking it to read a file on someone else's computer.
+
+That is also why the local demonstration is the stronger one: **you can reproduce it and the hosted one you cannot.** Clone the repo, run [the sixty-second block above](#verify-it-yourself-in-60-seconds), and you get the same result on your own machine — one process writes, a different process reads it back, and deleting the file breaks both. No network hop to take on trust.
 
 ## The trust gate
 
@@ -250,7 +266,7 @@ Everything in the left column is exercised by the demo and covered by tests.
 | Deadline parsing incl. explicit vague handling | Speaker attribution is `Name:` prefix only | Notifications when something comes due |
 | .xlsx export built live from memory | Deal stage is set manually, not inferred | A *durable* hosted deployment |
 | | Hosted writes reset when the instance recycles | |
-| 75 tests against real Sibyl, not mocks | | |
+| 76 tests against real Sibyl, not mocks | | |
 
 Known limits, stated plainly: the classifier is regex-based, so it will misroute unusual phrasing — the confidence floor sends the uncertain cases to a human rather than guessing, which is the intended failure mode. Conflicting pricing rules resolve last-write-wins, and the flag reason records the ceiling that was live at check time. Re-ingesting the same transcript is idempotent: promise IDs are SHA-1 of the text, so it updates rather than duplicates.
 
@@ -290,7 +306,7 @@ troth --db ./scratch.db brief meridian
 
 ```bash
 pip install -e ".[dev]"
-pytest -q          # 75 passed
+pytest -q          # 76 passed
 ```
 
 Every test runs against a **real Sibyl database** in a temp directory — nothing is mocked, so a breaking change in `sibyl-memory-client` fails the suite instead of surfacing in the demo.
@@ -314,7 +330,7 @@ troth/
 ├── export.py        ← .xlsx workbook building
 ├── server.py        ← Starlette API, serves the dashboard same-origin
 └── cli.py           ← seed · ingest · brief · due · flags · resolve · archive · export · serve
-tests/               ← 75 tests against a real Sibyl database
+tests/               ← 76 tests against a real Sibyl database
 examples/            ← 5 sample transcripts + 2 deliberate edge cases
 docs/screenshots/    ← captured from the running app, not mocked up
 troth-v2-lethe-blue.html   ← the dashboard
