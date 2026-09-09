@@ -17,13 +17,20 @@
 
 Reps lose deals because nobody remembers what was said three calls ago — a discount promised, a deadline agreed, a scope committed to. Troth reads your call transcripts, routes every line into the tier it belongs in, and checks each promise against standing policy **at the moment it is made**. A promise that breaks policy is downgraded to `flagged` and Troth will not repeat it as fact until a human decides. Archive a client and it refuses to brief you on them at all.
 
-**[ Live sandbox ↗ ](https://usetroth.vercel.app)** · **[ The load-bearing moment ↗ ](#where-memory-is-load-bearing)** · **[ Verify it in 60 seconds ↗ ](#verify-it-yourself-in-60-seconds)** · **[ Run it ↗ ](#run-it)** · **[ Honesty table ↗ ](#whats-real-and-whats-not)**
+**[ Demo video ↗ ](#demo)** · **[ Live sandbox ↗ ](https://usetroth.vercel.app)** · **[ The load-bearing moment ↗ ](#where-memory-is-load-bearing)** · **[ Verify it in 60 seconds ↗ ](#verify-it-yourself-in-60-seconds)** · **[ Run it ↗ ](#run-it)** · **[ Honesty table ↗ ](#whats-real-and-whats-not)**
 
 Built for the **[Sibyl Labs Hackathon](https://hack.sibyllabs.org)** · Sep 1–10, 2026.
 
 </div>
 
 ---
+
+## Demo
+
+<!-- SUBMISSION: replace the line below with the video URL before submitting -->
+**▶ Watch the demo — _link to be added_**
+
+Three and a half minutes: a rep offers a 25% discount when policy caps it at 15%, Troth flags it against the ceiling it read out of REFERENCE, and then — in one unbroken take, with the commit hash on screen — every process is killed and a brand new one recalls the whole thing off disk. It closes on the deletion test: point Troth at an empty memory and it refuses to answer rather than guessing.
 
 ## The load-bearing moment, in one picture
 
@@ -47,6 +54,7 @@ Deep links work throughout: `#dashboard/commitments` opens a view, and `#promise
 
 ## Table of contents
 
+- [Demo](#demo)
 - [The load-bearing moment, in one picture](#the-load-bearing-moment-in-one-picture)
 - [What it does](#what-it-does)
 - [Where memory is load-bearing](#where-memory-is-load-bearing)
@@ -84,7 +92,7 @@ Nothing in Troth assumes a *customer*. It assumes a **rule** and a **commitment*
 | **WARM** | `set_entity` / `get_entity` / `list_entities` | Clients, promises, dated commitments | [:98](troth/memory.py#L98), [:277](troth/memory.py#L277), [:350](troth/memory.py#L350) |
 | **COLD** | `write_event` / `read_events` | Append-only interaction + audit journal | [:209](troth/memory.py#L209), [:216](troth/memory.py#L216) |
 | **REFERENCE** | `set_reference` / `get_reference` | Standing pricing policy | [:113](troth/memory.py#L113), [:129](troth/memory.py#L129) |
-| **ARCHIVE** | `archive_entity` | Churned clients, out of the read path | [:384](troth/memory.py#L384) |
+| **ARCHIVE** | `archive_entity` | Churned clients, out of the read path | [:383](troth/memory.py#L383) |
 | *search* | `search_entities` / `search` | FTS5 across tiers | [:412](troth/memory.py#L412), [:156](troth/memory.py#L156) |
 
 **The single most load-bearing line** is [`current_max_discount()` at memory.py:116](troth/memory.py#L116). It reads the discount ceiling out of REFERENCE on **every** promise check, and it has **no default**:
