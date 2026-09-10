@@ -9,6 +9,7 @@
 ![memory](https://img.shields.io/badge/Sibyl_Memory-5_tiers,_all_load--bearing-D7FFB2)
 ![python](https://img.shields.io/badge/Python-3.10+-5FD8E8)
 [![live](https://img.shields.io/badge/live-usetroth.vercel.app-5FD8E8)](https://usetroth.vercel.app)
+[![demo](https://img.shields.io/badge/demo-watch_3_min-FF9C72)](https://youtu.be/MeNU7xVRR3A)
 ![stack](https://img.shields.io/badge/Starlette_·_SQLite_FTS5_·_openpyxl-1f1f23)
 
 ### *A pledged word.*
@@ -17,7 +18,7 @@
 
 Reps lose deals because nobody remembers what was said three calls ago — a discount promised, a deadline agreed, a scope committed to. Troth reads your call transcripts, routes every line into the tier it belongs in, and checks each promise against standing policy **at the moment it is made**. A promise that breaks policy is downgraded to `flagged` and Troth will not repeat it as fact until a human decides. Archive a client and it refuses to brief you on them at all.
 
-**[ Demo video ↗ ](#demo)** · **[ Live sandbox ↗ ](https://usetroth.vercel.app)** · **[ The load-bearing moment ↗ ](#where-memory-is-load-bearing)** · **[ Verify it in 60 seconds ↗ ](#verify-it-yourself-in-60-seconds)** · **[ Run it ↗ ](#run-it)** · **[ Honesty table ↗ ](#whats-real-and-whats-not)**
+**[ Demo video ↗ ](https://youtu.be/MeNU7xVRR3A)** · **[ Live sandbox ↗ ](https://usetroth.vercel.app)** · **[ The load-bearing moment ↗ ](#where-memory-is-load-bearing)** · **[ Verify it in 60 seconds ↗ ](#verify-it-yourself-in-60-seconds)** · **[ Run it ↗ ](#run-it)** · **[ Honesty table ↗ ](#whats-real-and-whats-not)**
 
 Built for the **[Sibyl Labs Hackathon](https://hack.sibyllabs.org)** · Sep 1–10, 2026.
 
@@ -27,8 +28,7 @@ Built for the **[Sibyl Labs Hackathon](https://hack.sibyllabs.org)** · Sep 1–
 
 ## Demo
 
-<!-- SUBMISSION: replace the line below with the video URL before submitting -->
-**▶ Watch the demo — _link to be added_**
+**[▶ Watch the demo ↗](https://youtu.be/MeNU7xVRR3A)** · 3 minutes
 
 Three and a half minutes: a rep offers a 25% discount when policy caps it at 15%, Troth flags it against the ceiling it read out of REFERENCE, and then — in one unbroken take, with the commit hash on screen — every process is killed and a brand new one recalls the whole thing off disk. It closes on the deletion test: point Troth at an empty memory and it refuses to answer rather than guessing.
 
